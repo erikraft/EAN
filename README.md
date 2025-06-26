@@ -1,0 +1,2 @@
+# EAN
+🏷️｜EAN — Barcode Generator
