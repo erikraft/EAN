@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerador de Código de Barras EAN-13</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; padding: 20px; }
+        input { padding: 10px; width: 200px; margin-bottom: 10px; }
+        button { padding: 10px 20px; background: blue; color: white; border: none; cursor: pointer; }
+        ul { list-style: none; padding: 0; }
+        li { background: #f0f0f0; margin: 5px 0; padding: 5px; }
+    </style>
+</head>
+<body>
+    <h1>Gerador de Código de Barras EAN-13</h1>
+    <input type="text" id="codigoBase" maxlength="11" placeholder="Digite até 11 dígitos">
+    <button onclick="gerarCodigos()">Gerar Códigos</button>
+    <ul id="listaCodigos"></ul>
+    
+    <script>
+        function calcularDigitoVerificador(codigo) {
+            let soma = 0;
+            for (let i = 0; i < codigo.length; i++) {
+                soma += parseInt(codigo[i]) * (i % 2 === 0 ? 1 : 3);
+            }
+            return (10 - (soma % 10)) % 10;
+        }
+
+        function gerarCodigos() {
+            let codigoBase = document.getElementById("codigoBase").value.replace(/\D/g, "");
+            if (codigoBase.length < 10 || codigoBase.length > 11) {
+                alert("Insira um código com 10 ou 11 dígitos.");
+                return;
+            }
+            let base = codigoBase.padEnd(11, "0");
+            let lista = document.getElementById("listaCodigos");
+            lista.innerHTML = "";
+            for (let i = 0; i < 10; i++) {
+                let codigo12 = base.slice(0, 10) + (codigoBase.length === 11 ? codigoBase[10] : "") + i.toString().padStart(2, "0");
+                let dv = calcularDigitoVerificador(codigo12);
+                let codigoCompleto = codigo12 + dv;
+                let li = document.createElement("li");
+                li.textContent = codigoCompleto;
+                lista.appendChild(li);
+            }
+        }
+    </script>
+</body>
+</html>
