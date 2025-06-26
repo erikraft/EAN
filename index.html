@@ -1,50 +1,800 @@
 <!DOCTYPE html>
 <html lang="pt">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gerador de Código de Barras EAN-13</title>
-    <style>
-        body { font-family: Arial, sans-serif; text-align: center; padding: 20px; }
-        input { padding: 10px; width: 200px; margin-bottom: 10px; }
-        button { padding: 10px 20px; background: blue; color: white; border: none; cursor: pointer; }
-        ul { list-style: none; padding: 0; }
-        li { background: #f0f0f0; margin: 5px 0; padding: 5px; }
-    </style>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ErikrafT EAN - Procurador/Gerador/Scanner</title>
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="images/barcode_black.png" media="(prefers-color-scheme: light)" />
+    <link rel="icon" type="image/png" href="images/barcode_white.png" media="(prefers-color-scheme: dark)" />
+    <link rel="apple-touch-icon" href="images/barcode_white.png" />
+    <link rel="shortcut icon" href="images/barcode_black.png" media="(prefers-color-scheme: light)" />
+    <link rel="shortcut icon" href="images/barcode_white.png" media="(prefers-color-scheme: dark)" />
+    <script>
+      // JavaScript para detectar e aplicar o tema correto no carregamento
+      if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        // Tema escuro detectado
+        document.querySelector('link[rel="shortcut icon"]').href = 'images/barcode_white.png';
+      }
+      
+      // Ouvir mudanças no tema
+      window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+        document.querySelector('link[rel="icon"]').href = e.matches ? 'images/barcode_white.png' : 'images/barcode_black.png';
+        document.querySelector('link[rel="shortcut icon"]').href = e.matches ? 'images/barcode_white.png' : 'images/barcode_black.png';
+      });
+    </script>
+    <!-- Styles -->
+    <link rel="stylesheet" href="styles.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Libre+Barcode+39&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 </head>
 <body>
-    <h1>Gerador de Código de Barras EAN-13</h1>
-    <input type="text" id="codigoBase" maxlength="11" placeholder="Digite até 11 dígitos">
-    <button onclick="gerarCodigos()">Gerar Códigos</button>
+    <h1>ErikrafT EAN</h1>
+
+    <hr />
+
+    <div style="margin: 40px 0; padding: 20px; background: #f9f9f9; border-radius: 8px;">
+    <h2 style="text-align: center; margin-bottom: 20px;"> Gerador de Códigos de Barras</h2>
+    <div class="form-section">
+        <div class="form-group country-search-container">
+            <label for="countrySelect">Selecione o país:</label>
+            <div class="search-box">
+                <i class="fas fa-search search-icon"></i>
+                <input type="text" id="countrySearch" placeholder="Buscar país ou código..." />
+            </div>
+            <select id="countrySelect">
+        <option value="000">USA (000)</option>
+        <option value="030">Chile (030)</option>
+        <option value="040">Colômbia (040)</option>
+        <option value="045">Finlândia (045)</option>
+        <option value="049">Dinamarca (049)</option>
+        <option value="050">Inglaterra (050)</option>
+        <option value="054">Gana (054)</option>
+        <option value="057">Noruega (057)</option>
+        <option value="060">Portugal (060)</option>
+        <option value="070">Países Baixos (070)</option>
+        <option value="073">Suécia (073)</option>
+        <option value="076">Brasil (076)</option>
+        <option value="078">Bulgária (078)</option>
+        <option value="079">Eslovênia (079)</option>
+        <option value="080">Itália (080)</option>
+        <option value="083">Polônia (083)</option>
+        <option value="084">Romênia (084)</option>
+        <option value="085">Hungria (085)</option>
+        <option value="086">Espanha (086)</option>
+        <option value="087">República Tcheca (087)</option>
+        <option value="089">Suíça (089)</option>
+        <option value="090">Austrália (090)</option>
+        <option value="091">Áustria (091)</option>
+        <option value="093">Irlanda (093)</option>
+        <option value="094">Nova Zelândia (094)</option>
+        <option value="095">Malásia (095)</option>
+        <option value="096">Israel (096)</option>
+        <option value="097">Tailândia (097)</option>
+        <option value="098">Filipinas (098)</option>
+        <option value="100">Bélgica (100)</option>
+        <option value="101">Bélgica (101)</option>
+        <option value="102">França (102)</option>
+        <option value="103">França (103)</option>
+        <option value="104">Bulgária (104)</option>
+        <option value="105">Hungria (105)</option>
+        <option value="106">Eslováquia (106)</option>
+        <option value="107">Eslováquia (107)</option>
+        <option value="108">Croácia (108)</option>
+        <option value="109">Bósnia e Herzegovina (109)</option>
+        <option value="110">Romênia (110)</option>
+        <option value="111">Sérvia (111)</option>
+        <option value="112">Macedônia (112)</option>
+        <option value="113">Bósnia e Herzegovina (113)</option>
+        <option value="114">Eslovênia (114)</option>
+        <option value="115">Lituânia (115)</option>
+        <option value="116">Letônia (116)</option>
+        <option value="117">Estônia (117)</option>
+        <option value="118">Moldávia (118)</option>
+        <option value="119">Armênia (119)</option>
+        <option value="120">Albânia (120)</option>
+        <option value="121">Hungria (121)</option>
+        <option value="122">Geórgia (122)</option>
+        <option value="123">Bielorrússia (123)</option>
+        <option value="124">Moldávia (124)</option>
+        <option value="125">Ucrânia (125)</option>
+        <option value="126">Croácia (126)</option>
+        <option value="127">Eslováquia (127)</option>
+        <option value="128">República Tcheca (128)</option>
+        <option value="129">Sérvia (129)</option>
+        <option value="130">Suécia (130)</option>
+        <option value="131">Suécia (131)</option>
+        <option value="132">Noruega (132)</option>
+        <option value="133">Noruega (133)</option>
+        <option value="134">Finlândia (134)</option>
+        <option value="135">Finlândia (135)</option>
+        <option value="136">Dinamarca (136)</option>
+        <option value="137">Dinamarca (137)</option>
+        <option value="138">Itália (138)</option>
+        <option value="139">Itália (139)</option>
+        <option value="140">Espanha (140)</option>
+        <option value="141">Espanha (141)</option>
+        <option value="142">Polônia (142)</option>
+        <option value="143">Polônia (143)</option>
+        <option value="144">Romênia (144)</option>
+        <option value="145">Romênia (145)</option>
+        <option value="146">Hungria (146)</option>
+        <option value="147">Hungria (147)</option>
+        <option value="148">República Tcheca (148)</option>
+        <option value="149">República Tcheca (149)</option>
+        <option value="150">Eslováquia (150)</option>
+        <option value="151">Eslováquia (151)</option>
+        <option value="152">Suíça (152)</option>
+        <option value="153">Suíça (153)</option>
+        <option value="154">Suécia (154)</option>
+        <option value="155">Suécia (155)</option>
+        <option value="156">Noruega (156)</option>
+        <option value="157">Noruega (157)</option>
+        <option value="158">Dinamarca (158)</option>
+        <option value="159">Dinamarca (159)</option>
+        <option value="160">Itália (160)</option>
+        <option value="161">Itália (161)</option>
+        <option value="162">Espanha (162)</option>
+        <option value="163">Espanha (163)</option>
+        <option value="164">Polônia (164)</option>
+        <option value="165">Polônia (165)</option>
+        <option value="166">Romênia (166)</option>
+        <option value="167">Romênia (167)</option>
+        <option value="168">Hungria (168)</option>
+        <option value="169">Hungria (169)</option>
+        <option value="170">República Tcheca (170)</option>
+        <option value="171">República Tcheca (171)</option>
+        <option value="172">Eslováquia (172)</option>
+        <option value="173">Eslováquia (173)</option>
+        <option value="174">Suíça (174)</option>
+        <option value="175">Suíça (175)</option>
+        <option value="176">Suécia (176)</option>
+        <option value="177">Suécia (177)</option>
+        <option value="178">Noruega (178)</option>
+        <option value="179">Noruega (179)</option>
+        <option value="200">República Tcheca (200)</option>
+        <option value="201">República Tcheca (201)</option>
+        <option value="202">Hungria (202)</option>
+        <option value="203">Hungria (203)</option>
+        <option value="204">Polônia (204)</option>
+        <option value="205">Polônia (205)</option>
+        <option value="206">Romênia (206)</option>
+        <option value="207">Romênia (207)</option>
+        <option value="208">Suíça (208)</option>
+        <option value="209">Suíça (209)</option>
+        <option value="210">Suécia (210)</option>
+        <option value="211">Suécia (211)</option>
+        <option value="212">Noruega (212)</option>
+        <option value="213">Noruega (213)</option>
+        <option value="214">Dinamarca (214)</option>
+        <option value="215">Dinamarca (215)</option>
+        <option value="216">Itália (216)</option>
+        <option value="217">Itália (217)</option>
+        <option value="218">Espanha (218)</option>
+        <option value="219">Espanha (219)</option>
+        <option value="220">Polônia (220)</option>
+        <option value="221">Polônia (221)</option>
+        <option value="222">Romênia (222)</option>
+        <option value="223">Romênia (223)</option>
+        <option value="224">Hungria (224)</option>
+        <option value="225">Hungria (225)</option>
+        <option value="226">República Tcheca (226)</option>
+        <option value="227">República Tcheca (227)</option>
+        <option value="228">Eslováquia (228)</option>
+        <option value="229">Eslováquia (229)</option>
+        <option value="230">Suíça (230)</option>
+        <option value="231">Suíça (231)</option>
+        <option value="232">Suécia (232)</option>
+        <option value="233">Suécia (233)</option>
+        <option value="234">Noruega (234)</option>
+        <option value="235">Noruega (235)</option>
+        <option value="236">Dinamarca (236)</option>
+        <option value="237">Dinamarca (237)</option>
+        <option value="238">Itália (238)</option>
+        <option value="239">Itália (239)</option>
+        <option value="240">Espanha (240)</option>
+        <option value="241">Espanha (241)</option>
+        <option value="242">Polônia (242)</option>
+        <option value="243">Polônia (243)</option>
+        <option value="244">Romênia (244)</option>
+        <option value="245">Romênia (245)</option>
+        <option value="246">Hungria (246)</option>
+        <option value="247">Hungria (247)</option>
+        <option value="248">República Tcheca (248)</option>
+        <option value="249">República Tcheca (249)</option>
+        <option value="250">Eslováquia (250)</option>
+        <option value="251">Eslováquia (251)</option>
+        <option value="252">Suíça (252)</option>
+        <option value="253">Suíça (253)</option>
+        <option value="254">Suécia (254)</option>
+        <option value="255">Suécia (255)</option>
+        <option value="256">Noruega (256)</option>
+        <option value="257">Noruega (257)</option>
+        <option value="258">Dinamarca (258)</option>
+        <option value="259">Dinamarca (259)</option>
+        <option value="260">Itália (260)</option>
+        <option value="261">Itália (261)</option>
+        <option value="262">Espanha (262)</option>
+        <option value="263">Espanha (263)</option>
+        <option value="264">Polônia (264)</option>
+        <option value="265">Polônia (265)</option>
+        <option value="266">Romênia (266)</option>
+        <option value="267">Romênia (267)</option>
+        <option value="268">Hungria (268)</option>
+        <option value="269">Hungria (269)</option>
+        <option value="270">República Tcheca (270)</option>
+        <option value="271">República Tcheca (271)</option>
+        <option value="272">Eslováquia (272)</option>
+        <option value="273">Eslováquia (273)</option>
+        <option value="274">Suíça (274)</option>
+        <option value="275">Suíça (275)</option>
+        <option value="276">Alemanha (276)</option>
+        <option value="277">Alemanha (277)</option>
+        <option value="278">Alemanha (278)</option>
+        <option value="279">Alemanha (279)</option>
+        <option value="280">Alemanha (280)</option>
+        <option value="281">Alemanha (281)</option>
+        <option value="282">Alemanha (282)</option>
+        <option value="283">Alemanha (283)</option>
+        <option value="284">Alemanha (284)</option>
+        <option value="285">Alemanha (285)</option>
+        <option value="286">Alemanha (286)</option>
+        <option value="287">Alemanha (287)</option>
+        <option value="288">Alemanha (288)</option>
+        <option value="289">Alemanha (289)</option>
+        <option value="290">Alemanha (290)</option>
+        <option value="291">Alemanha (291)</option>
+        <option value="292">Alemanha (292)</option>
+        <option value="293">Alemanha (293)</option>
+        <option value="294">Alemanha (294)</option>
+        <option value="295">Alemanha (295)</option>
+        <option value="296">Alemanha (296)</option>
+        <option value="297">Alemanha (297)</option>
+        <option value="298">Alemanha (298)</option>
+        <option value="299">Alemanha (299)</option>
+        <option value="300">França (300)</option>
+        <option value="301">França (301)</option>
+        <option value="302">França (302)</option>
+        <option value="303">França (303)</option>
+        <option value="304">França (304)</option>
+        <option value="305">França (305)</option>
+        <option value="306">França (306)</option>
+        <option value="307">França (307)</option>
+        <option value="308">França (308)</option>
+        <option value="309">França (309)</option>
+        <option value="310">EUA (310)</option>
+        <option value="311">EUA (311)</option>
+        <option value="312">EUA (312)</option>
+        <option value="313">EUA (313)</option>
+        <option value="314">EUA (314)</option>
+        <option value="315">EUA (315)</option>
+        <option value="316">EUA (316)</option>
+        <option value="317">EUA (317)</option>
+        <option value="318">EUA (318)</option>
+        <option value="319">EUA (319)</option>
+        <option value="320">EUA (320)</option>
+        <option value="321">EUA (321)</option>
+        <option value="322">EUA (322)</option>
+        <option value="323">EUA (323)</option>
+        <option value="324">EUA (324)</option>
+        <option value="325">EUA (325)</option>
+        <option value="326">EUA (326)</option>
+        <option value="327">EUA (327)</option>
+        <option value="328">EUA (328)</option>
+        <option value="329">EUA (329)</option>
+        <option value="330">EUA (330)</option>
+        <option value="331">EUA (331)</option>
+        <option value="332">EUA (332)</option>
+        <option value="333">EUA (333)</option>
+        <option value="334">EUA (334)</option>
+        <option value="335">EUA (335)</option>
+        <option value="336">EUA (336)</option>
+        <option value="337">EUA (337)</option>
+        <option value="338">EUA (338)</option>
+        <option value="339">EUA (339)</option>
+        <option value="340">EUA (340)</option>
+        <option value="341">EUA (341)</option>
+        <option value="342">EUA (342)</option>
+        <option value="343">EUA (343)</option>
+        <option value="344">EUA (344)</option>
+        <option value="345">EUA (345)</option>
+        <option value="346">EUA (346)</option>
+        <option value="347">EUA (347)</option>
+        <option value="348">EUA (348)</option>
+        <option value="349">EUA (349)</option>
+        <option value="350">EUA (350)</option>
+        <option value="351">EUA (351)</option>
+        <option value="352">EUA (352)</option>
+        <option value="353">EUA (353)</option>
+        <option value="354">EUA (354)</option>
+        <option value="355">EUA (355)</option>
+        <option value="356">EUA (356)</option>
+        <option value="357">EUA (357)</option>
+        <option value="358">EUA (358)</option>
+        <option value="359">EUA (359)</option>
+        <option value="360">EUA (360)</option>
+        <option value="361">EUA (361)</option>
+        <option value="362">EUA (362)</option>
+        <option value="363">EUA (363)</option>
+        <option value="364">EUA (364)</option>
+        <option value="365">EUA (365)</option>
+        <option value="366">EUA (366)</option>
+        <option value="367">EUA (367)</option>
+        <option value="368">EUA (368)</option>
+        <option value="369">EUA (369)</option>
+        <option value="370">EUA (370)</option>
+        <option value="371">EUA (371)</option>
+        <option value="372">EUA (372)</option>
+        <option value="373">EUA (373)</option>
+        <option value="374">EUA (374)</option>
+        <option value="375">EUA (375)</option>
+        <option value="376">EUA (376)</option>
+        <option value="377">EUA (377)</option>
+        <option value="378">EUA (378)</option>
+        <option value="379">EUA (379)</option>
+        <option value="380">Bulgária (380)</option>
+        <option value="383">Eslovênia (383)</option>
+        <option value="385">Croácia (385)</option>
+        <option value="387">Bósnia e Herzegovina (387)</option>
+        <option value="389">Montenegro (389)</option>
+        <option value="390">Itália (390)</option>
+        <option value="391">Itália (391)</option>
+        <option value="392">Itália (392)</option>
+        <option value="393">Itália (393)</option>
+        <option value="394">Itália (394)</option>
+        <option value="395">Itália (395)</option>
+        <option value="400">Alemanha (400)</option>
+        <option value="460">Rússia (460)</option>
+        <option value="469">Rússia (469)</option>
+        <option value="470">Kyrgyzstan (470)</option>
+        <option value="471">Taiwan (471)</option>
+        <option value="474">Estônia (474)</option>
+        <option value="475">Letônia (475)</option>
+        <option value="476">Azerbaijão (476)</option>
+        <option value="477">Lituânia (477)</option>
+        <option value="478">Uzbequistão (478)</option>
+        <option value="479">Sri Lanka (479)</option>
+        <option value="480">Filipinas (480)</option>
+        <option value="481">Bielorrússia (481)</option>
+        <option value="482">Ucrânia (482)</option>
+        <option value="484">Moldávia (484)</option>
+        <option value="485">Armênia (485)</option>
+        <option value="486">Geórgia (486)</option>
+        <option value="487">Cazaquistão (487)</option>
+        <option value="489">Hong Kong (489)</option>
+        <option value="490">Japão (490)</option>
+        <option value="491">Japão (491)</option>
+        <option value="492">Japão (492)</option>
+        <option value="493">Japão (493)</option>
+        <option value="500">Reino Unido (500)</option>
+        <option value="520">Grécia (520)</option>
+        <option value="528">Líbano (528)</option>
+        <option value="529">Chipre (529)</option>
+        <option value="530">Albânia (530)</option>
+        <option value="531">Macedônia (531)</option>
+        <option value="535">Malta (535)</option>
+        <option value="539">Irlanda (539)</option>
+        <option value="540">Bélgica e Luxemburgo (540)</option>
+        <option value="541">Bélgica e Luxemburgo (541)</option>
+        <option value="542">Bélgica e Luxemburgo (542)</option>
+        <option value="543">Bélgica e Luxemburgo (543)</option>
+        <option value="544">Bélgica e Luxemburgo (544)</option>
+        <option value="545">Bélgica e Luxemburgo (545)</option>
+        <option value="546">Bélgica e Luxemburgo (546)</option>
+        <option value="547">Bélgica e Luxemburgo (547)</option>
+        <option value="548">Bélgica e Luxemburgo (548)</option>
+        <option value="549">Bélgica e Luxemburgo (549)</option>
+        <option value="560">Portugal (560)</option>
+        <option value="569">Islândia (569)</option>
+        <option value="570">Dinamarca e Ilhas Faroé (570)</option>
+        <option value="571">Lituânia (571)</option>
+        <option value="590">Polônia (590)</option>
+        <option value="594">Romênia (594)</option>
+        <option value="599">Hungria (599)</option>
+        <option value="600">África do Sul (600)</option>
+        <option value="601">Gana (601)</option>
+        <option value="603">Gana (603)</option>
+        <option value="604">Marrocos (604)</option>
+        <option value="608">Bahamas (608)</option>
+        <option value="609">Maurício (609)</option>
+        <option value="611">Quênia (611)</option>
+        <option value="613">Argélia (613)</option>
+        <option value="615">Nigéria (615)</option>
+        <option value="616">Quênia (616)</option>
+        <option value="618">Costa do Marfim (618)</option>
+        <option value="619">Tunísia (619)</option>
+        <option value="620">Tanzânia (620)</option>
+        <option value="621">Síria (621)</option>
+        <option value="622">Egito (622)</option>
+        <option value="623">Brunei (623)</option>
+        <option value="624">Líbano (624)</option>
+        <option value="625">Jordânia (625)</option>
+        <option value="626">Irã (626)</option>
+        <option value="627">Kuwait (627)</option>
+        <option value="628">Arábia Saudita (628)</option>
+        <option value="629">Emirados Árabes Unidos (629)</option>
+        <option value="630">Omã (630)</option>
+        <option value="631">Bahrein (631)</option>
+        <option value="632">Iraque (632)</option>
+        <option value="633">Catar (633)</option>
+        <option value="634">Líbia (634)</option>
+        <option value="635">Jordânia (635)</option>
+        <option value="636">Síria (636)</option>
+        <option value="637">Iraque (637)</option>
+        <option value="638">Kuwait (638)</option>
+        <option value="639">Bahrein (639)</option>
+        <option value="640">Finlândia (640)</option>
+        <option value="641">Suécia (641)</option>
+        <option value="642">Noruega (642)</option>
+        <option value="643">Rússia (643)</option>
+        <option value="645">Jamaica (645)</option>
+        <option value="646">Angola (646)</option>
+        <option value="647">Quênia (647)</option>
+        <option value="648">Tanzânia (648)</option>
+        <option value="649">Nigéria (649)</option>
+        <option value="690">China (690)</option>
+        <option value="691">China (691)</option>
+        <option value="692">China (692)</option>
+        <option value="693">China (693)</option>
+        <option value="694">China (694)</option>
+        <option value="695">China (695)</option>
+        <option value="696">China (696)</option>
+        <option value="697">China (697)</option>
+        <option value="698">China (698)</option>
+        <option value="699">China (699)</option>
+        <option value="700">Noruega (700)</option>
+        <option value="701">Noruega (701)</option>
+        <option value="702">Noruega (702)</option>
+        <option value="703">Noruega (703)</option>
+        <option value="704">Noruega (704)</option>
+        <option value="705">Noruega (705)</option>
+        <option value="706">Noruega (706)</option>
+        <option value="707">Noruega (707)</option>
+        <option value="708">Noruega (708)</option>
+        <option value="709">Noruega (709)</option>
+        <option value="710">EUA (710)</option>
+        <option value="711">EUA (711)</option>
+        <option value="712">EUA (712)</option>
+        <option value="713">EUA (713)</option>
+        <option value="714">EUA (714)</option>
+        <option value="715">EUA (715)</option>
+        <option value="716">EUA (716)</option>
+        <option value="717">EUA (717)</option>
+        <option value="718">EUA (718)</option>
+        <option value="719">EUA (719)</option>
+        <option value="720">EUA (720)</option>
+        <option value="721">EUA (721)</option>
+        <option value="722">EUA (722)</option>
+        <option value="723">EUA (723)</option>
+        <option value="724">EUA (724)</option>
+        <option value="725">EUA (725)</option>
+        <option value="726">EUA (726)</option>
+        <option value="727">EUA (727)</option>
+        <option value="728">EUA (728)</option>
+        <option value="729">EUA (729)</option>
+        <option value="730">Suécia (730)</option>
+        <option value="731">Suécia (731)</option>
+        <option value="732">Suécia (732)</option>
+        <option value="733">Suécia (733)</option>
+        <option value="734">Suécia (734)</option>
+        <option value="735">Suécia (735)</option>
+        <option value="736">Suécia (736)</option>
+        <option value="737">Suécia (737)</option>
+        <option value="738">Suécia (738)</option>
+        <option value="739">Suécia (739)</option>
+        <option value="740">Noruega (740)</option>
+        <option value="741">Noruega (741)</option>
+        <option value="742">Noruega (742)</option>
+        <option value="743">Noruega (743)</option>
+        <option value="744">Noruega (744)</option>
+        <option value="745">Noruega (745)</option>
+        <option value="746">Noruega (746)</option>
+        <option value="747">Noruega (747)</option>
+        <option value="748">Noruega (748)</option>
+        <option value="749">Noruega (749)</option>
+        <option value="750">México (750)</option>
+        <option value="759">Venezuela (759)</option>
+        <option value="760">Suíça (760)</option>
+        <option value="761">Suíça (761)</option>
+        <option value="762">Suíça (762)</option>
+        <option value="763">Suíça (763)</option>
+        <option value="764">Suíça (764)</option>
+        <option value="765">Suíça (765)</option>
+        <option value="766">Suíça (766)</option>
+        <option value="767">Suíça (767)</option>
+        <option value="768">Suíça (768)</option>
+        <option value="769">Suíça (769)</option>
+        <option value="770">Colômbia (770)</option>
+        <option value="771">Colômbia (771)</option>
+        <option value="772">Colômbia (772)</option>
+        <option value="773">Colômbia (773)</option>
+        <option value="774">Colômbia (774)</option>
+        <option value="775">Colômbia (775)</option>
+        <option value="776">Colômbia (776)</option>
+        <option value="777">Colômbia (777)</option>
+        <option value="778">Colômbia (778)</option>
+        <option value="779">Colômbia (779)</option>
+        <option value="780">Colômbia (780)</option>
+        <option value="781">Colômbia (781)</option>
+        <option value="782">Colômbia (782)</option>
+        <option value="783">Colômbia (783)</option>
+        <option value="784">Colômbia (784)</option>
+        <option value="785">Colômbia (785)</option>
+        <option value="786">Colômbia (786)</option>
+        <option value="787">Colômbia (787)</option>
+        <option value="788">Colômbia (788)</option>
+        <option value="789">Brasil (789)</option>
+        <option value="790">Colômbia (790)</option>
+        <option value="791">Colômbia (791)</option>
+        <option value="792">Colômbia (792)</option>
+        <option value="793">Colômbia (793)</option>
+        <option value="794">Colômbia (794)</option>
+        <option value="795">Colômbia (795)</option>
+        <option value="796">Colômbia (796)</option>
+        <option value="797">Colômbia (797)</option>
+        <option value="798">Colômbia (798)</option>
+        <option value="799">Colômbia (799)</option>
+        <option value="800">Itália (800)</option>
+        <option value="801">Itália (801)</option>
+        <option value="802">Itália (802)</option>
+        <option value="803">Itália (803)</option>
+        <option value="804">Itália (804)</option>
+        <option value="805">Itália (805)</option>
+        <option value="806">Itália (806)</option>
+        <option value="807">Itália (807)</option>
+        <option value="808">Itália (808)</option>
+        <option value="809">Itália (809)</option>
+        <option value="810">Espanha (810)</option>
+        <option value="811">Espanha (811)</option>
+        <option value="812">Espanha (812)</option>
+        <option value="813">Espanha (813)</option>
+        <option value="814">Espanha (814)</option>
+        <option value="815">Espanha (815)</option>
+        <option value="816">Espanha (816)</option>
+        <option value="817">Espanha (817)</option>
+        <option value="818">Espanha (818)</option>
+        <option value="819">Espanha (819)</option>
+        <option value="820">Polônia (820)</option>
+        <option value="821">Polônia (821)</option>
+        <option value="822">Polônia (822)</option>
+        <option value="823">Polônia (823)</option>
+        <option value="824">Polônia (824)</option>
+        <option value="825">Polônia (825)</option>
+        <option value="826">Polônia (826)</option>
+        <option value="827">Polônia (827)</option>
+        <option value="828">Polônia (828)</option>
+        <option value="829">Polônia (829)</option>
+        <option value="830">Romênia (830)</option>
+        <option value="831">Romênia (831)</option>
+        <option value="832">Romênia (832)</option>
+        <option value="833">Romênia (833)</option>
+        <option value="834">Romênia (834)</option>
+        <option value="835">Romênia (835)</option>
+        <option value="836">Romênia (836)</option>
+        <option value="837">Romênia (837)</option>
+        <option value="838">Romênia (838)</option>
+        <option value="839">Romênia (839)</option>
+        <option value="840">Espanha (840)</option>
+        <option value="841">Espanha (841)</option>
+        <option value="842">Espanha (842)</option>
+        <option value="843">Espanha (843)</option>
+        <option value="844">Espanha (844)</option>
+        <option value="845">Espanha (845)</option>
+        <option value="846">Espanha (846)</option>
+        <option value="847">Espanha (847)</option>
+        <option value="848">Espanha (848)</option>
+        <option value="850">Códigos de preço (850)</option>
+        <option value="851">Códigos de preço (851)</option>
+        <option value="852">Códigos de preço (852)</option>
+        <option value="853">Códigos de preço (853)</option>
+        <option value="854">Códigos de preço (854)</option>
+        <option value="855">Códigos de preço (855)</option>
+        <option value="856">Códigos de preço (856)</option>
+        <option value="857">Códigos de preço (857)</option>
+        <option value="858">Códigos de preço (858)</option>
+        <option value="859">Códigos de preço (859)</option>
+        <option value="860">Sérvia (860)</option>
+        <option value="861">Sérvia (861)</option>
+        <option value="862">Sérvia (862)</option>
+        <option value="863">Sérvia (863)</option>
+        <option value="864">Sérvia (864)</option>
+        <option value="865">Sérvia (865)</option>
+        <option value="866">Sérvia (866)</option>
+        <option value="867">Sérvia (867)</option>
+        <option value="868">Sérvia (868)</option>
+        <option value="869">Sérvia (869)</option>
+        <option value="870">Países Baixos (870)</option>
+        <option value="871">Países Baixos (871)</option>
+        <option value="872">Países Baixos (872)</option>
+        <option value="873">Países Baixos (873)</option>
+        <option value="874">Países Baixos (874)</option>
+        <option value="875">Países Baixos (875)</option>
+        <option value="876">Países Baixos (876)</option>
+        <option value="877">Países Baixos (877)</option>
+        <option value="878">Países Baixos (878)</option>
+        <option value="879">Países Baixos (879)</option>
+        <option value="880">Coreia do Sul (880)</option>
+        <option value="881">Coreia do Sul (881)</option>
+        <option value="882">Coreia do Sul (882)</option>
+        <option value="883">Coreia do Sul (883)</option>
+        <option value="884">Coreia do Sul (884)</option>
+        <option value="885">Coreia do Sul (885)</option>
+        <option value="888">Cingapura (888)</option>
+        <option value="890">Índia (890)</option>
+        <option value="891">Índia (891)</option>
+        <option value="892">Índia (892)</option>
+        <option value="893">Índia (893)</option>
+        <option value="894">Índia (894)</option>
+        <option value="895">Índia (895)</option>
+        <option value="896">Índia (896)</option>
+        <option value="897">Índia (897)</option>
+        <option value="898">Índia (898)</option>
+        <option value="899">Índia (899)</option>
+        <option value="900">Áustria (900)</option>
+        <option value="901">Áustria (901)</option>
+        <option value="902">Áustria (902)</option>
+        <option value="903">Áustria (903)</option>
+        <option value="904">Áustria (904)</option>
+        <option value="905">Áustria (905)</option>
+        <option value="906">Áustria (906)</option>
+        <option value="907">Áustria (907)</option>
+        <option value="908">Áustria (908)</option>
+        <option value="909">Áustria (909)</option>
+        <option value="910">Áustria (910)</option>
+        <option value="911">Áustria (911)</option>
+        <option value="912">Áustria (912)</option>
+        <option value="913">Áustria (913)</option>
+        <option value="914">Áustria (914)</option>
+        <option value="915">Áustria (915)</option>
+        <option value="916">Áustria (916)</option>
+        <option value="917">Áustria (917)</option>
+        <option value="918">Áustria (918)</option>
+        <option value="919">Áustria (919)</option>
+        <option value="930">Austrália (930)</option>
+        <option value="931">Austrália (931)</option>
+        <option value="932">Austrália (932)</option>
+        <option value="933">Austrália (933)</option>
+        <option value="934">Austrália (934)</option>
+        <option value="935">Austrália (935)</option>
+        <option value="936">Austrália (936)</option>
+        <option value="937">Austrália (937)</option>
+        <option value="938">Austrália (938)</option>
+        <option value="939">Austrália (939)</option>
+        <option value="940">Nova Zelândia (940)</option>
+        <option value="941">Nova Zelândia (941)</option>
+        <option value="942">Nova Zelândia (942)</option>
+        <option value="943">Nova Zelândia (943)</option>
+        <option value="944">Nova Zelândia (944)</option>
+        <option value="945">Nova Zelândia (945)</option>
+        <option value="946">Nova Zelândia (946)</option>
+        <option value="947">Nova Zelândia (947)</option>
+        <option value="948">Nova Zelândia (948)</option>
+        <option value="949">Nova Zelândia (949)</option>
+        <option value="950">Uso interno (950)</option>
+        <option value="951">GS1 Global Office (951)</option>
+        <option value="955">Malásia (955)</option>
+        <option value="958">Macau (958)</option>
+        <option value="960">GS1 Global Office (960)</option>
+        <option value="961">GS1 Global Office (961)</option>
+        <option value="962">GS1 Global Office (962)</option>
+        <option value="963">GS1 Global Office (963)</option>
+        <option value="964">GS1 Global Office (964)</option>
+        <option value="965">GS1 Global Office (965)</option>
+        <option value="966">GS1 Global Office (966)</option>
+        <option value="967">GS1 Global Office (967)</option>
+        <option value="968">GS1 Global Office (968)</option>
+        <option value="969">GS1 Global Office (969)</option>
+        <option value="977">Periódicos - ISSN (977)</option>
+        <option value="978">Livros - ISBN (978)</option>
+        <option value="979">Livros - ISBN (979)</option>
+        <option value="980">Recibos de devolução (980)</option>
+        <option value="981">Cupons de moeda (981)</option>
+        <option value="982">Cupons de moeda (982)</option>
+        <option value="983">Cupons de moeda (983)</option>
+        <option value="984">Cupons de moeda (984)</option>
+        <option value="990">Cupons (990)</option>
+        <option value="991">Cupons (991)</option>
+        <option value="992">Cupons (992)</option>
+        <option value="993">Cupons (993)</option>
+        <option value="994">Cupons (994)</option>
+        <option value="995">Cupons (995)</option>
+        <option value="996">Cupons (996)</option>
+        <option value="997">Cupons (997)</option>
+        <option value="998">Cupons (998)</option>
+        <option value="999">Cupons (999)</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="codigoBase">Digite os dígitos do seu produto:</label>
+            <div class="input-group">
+                <input type="text" id="codigoBase" maxlength="8" placeholder="Digite até 8 dígitos do produto" />
+                <button onclick="gerarCodigos()" class="btn-primary">
+                    <i class="fas fa-barcode"></i> Gerar Códigos
+                </button>
+            </div>
+        </div>
+    </div>
     <ul id="listaCodigos"></ul>
+
+    <hr />
+
+    <div style="margin: 40px 0; padding: 20px; background: #f9f9f9; border-radius: 8px;">
+        <h2 style="margin-top: 0;">Pesquisar Produto</h2>
+        <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+            <input type="text" 
+                   id="searchBarcode" 
+                   placeholder="Digite o código de barras (UPC, EAN, ISBN)" 
+                   style="flex: 1; padding: 15px; font-size: 18px; border: 2px solid #4CAF50; border-radius: 8px; min-width: 400px;"
+                   autocomplete="off" />
+            <button onclick="buscarProduto()" 
+                    style="padding: 15px 18px; background: #4CAF50; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: 400; height: 100%;">
+                <i class="fas fa-search"></i> Buscar
+            </button>
+        </div>
+        <div id="barcode-type" style="color: #666; font-size: 14px; margin-bottom: 10px;"></div>
+    </div>
+    
+    <div id="searchResult" style="margin-top: 20px;"></div>
+    
+    <hr />
     
     <script>
-        function calcularDigitoVerificador(codigo) {
-            let soma = 0;
-            for (let i = 0; i < codigo.length; i++) {
-                soma += parseInt(codigo[i]) * (i % 2 === 0 ? 1 : 3);
+        // Configuração inicial do campo de busca
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchInput = document.getElementById('searchBarcode');
+            
+            if (searchInput) {
+                // Habilitar o campo
+                searchInput.disabled = false;
+                searchInput.readOnly = false;
+                
+                // Remover qualquer estilo que possa estar bloqueando
+                searchInput.style.pointerEvents = 'auto';
+                searchInput.style.opacity = '1';
+                
+                // Adicionar evento de tecla Enter
+                searchInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        buscarProduto();
+                    }
+                });
+                
+                // Focar no campo
+                setTimeout(() => {
+                    searchInput.focus();
+                }, 100);
+                
+                console.log('Campo de busca inicializado com sucesso');
+            } else {
+                console.error('Erro: Campo de busca não encontrado');
             }
-            return (10 - (soma % 10)) % 10;
-        }
-
-        function gerarCodigos() {
-            let codigoBase = document.getElementById("codigoBase").value.replace(/\D/g, "");
-            if (codigoBase.length < 10 || codigoBase.length > 11) {
-                alert("Insira um código com 10 ou 11 dígitos.");
-                return;
-            }
-            let base = codigoBase.padEnd(11, "0");
-            let lista = document.getElementById("listaCodigos");
-            lista.innerHTML = "";
-            for (let i = 0; i < 10; i++) {
-                let codigo12 = base.slice(0, 10) + (codigoBase.length === 11 ? codigoBase[10] : "") + i.toString().padStart(2, "0");
-                let dv = calcularDigitoVerificador(codigo12);
-                let codigoCompleto = codigo12 + dv;
-                let li = document.createElement("li");
-                li.textContent = codigoCompleto;
-                lista.appendChild(li);
-            }
-        }
+        });
     </script>
+
+    <section class="scanner-section" style="margin: 40px 0 60px;">
+        <h2 style="text-align: center; margin-bottom: 20px;">Scanner de Código de Barras</h2>
+        
+        <div class="scanner-controls">
+            <button onclick="iniciarScanner()" class="scanner-btn start">
+                <i class="fas fa-camera"></i> Iniciar Scanner
+            </button>
+            <button onclick="pararScanner()" class="scanner-btn stop">
+                <i class="fas fa-stop"></i> Parar Scanner
+            </button>
+        </div>
+        
+        <div id="scannerContainer">
+            <p style="color: white;">O scanner será exibido aqui</p>
+        </div>
+        
+        <div id="scannerResult" style="text-align: center; margin: 15px 0 0; color: #555; font-size: 0.95em;"></div>
+    </section>
+    
+    <div style="height: 40px;"></div> <!-- Espaço extra no final da página -->
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/quagga/0.12.1/quagga.min.js"></script>
+    <script src="script.js"></script>
 </body>
 </html>
