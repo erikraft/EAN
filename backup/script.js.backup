@@ -1,0 +1,820 @@
+// Funções de validação e normalização de códigos de barras
+function calcularDigitoVerificador(codigo) {
+    let soma = 0;
+    for (let i = 0; i < codigo.length; i++) {
+        soma += parseInt(codigo[i]) * (i % 2 === 0 ? 1 : 3);
+    }
+    return (10 - (soma % 10)) % 10;
+}
+
+// Valida o formato do código de barras
+function validarCodigoBarras(codigo) {
+    // Remove todos os caracteres não numéricos
+    const codigoLimpo = codigo.replace(/\D/g, '');
+    
+    // Verifica o comprimento
+    if (codigoLimpo.length < 8 || codigoLimpo.length > 13) {
+        return { valido: false, mensagem: 'O código deve ter entre 8 e 13 dígitos' };
+    }
+    
+    // Verifica se são apenas números
+    if (!/^\d+$/.test(codigoLimpo)) {
+        return { valido: false, mensagem: 'O código deve conter apenas números' };
+    }
+    
+    return { 
+        valido: true, 
+        codigo: codigoLimpo,
+        tipo: identificarTipoCodigo(codigoLimpo)
+    };
+}
+
+// Identifica o tipo de código de barras
+function identificarTipoCodigo(codigo) {
+    const len = codigo.length;
+    
+    // ISBN-10 (10 dígitos)
+    if (len === 10) return 'ISBN-10';
+    
+    // UPC-A (12 dígitos)
+    if (len === 12) return 'UPC-A';
+    
+    // EAN-13 (13 dígitos)
+    if (len === 13) {
+        // Verifica se é um ISBN-13 (começa com 978 ou 979)
+        if (codigo.startsWith('978') || codigo.startsWith('979')) {
+            return 'ISBN-13';
+        }
+        return 'EAN-13';
+    }
+    
+    // EAN-8 (8 dígitos)
+    if (len === 8) return 'EAN-8';
+    
+    // Outros formatos
+    return `Código de ${len} dígitos`;
+}
+
+// Converte entre formatos de código de barras
+function converterCodigo(codigo, formatoAlvo) {
+    const { tipo } = validarCodigoBarras(codigo);
+    
+    // Se já está no formato desejado, retorna o código original
+    if (tipo === formatoAlvo) return codigo;
+    
+    // Conversões suportadas
+    if (formatoAlvo === 'EAN-13') {
+        if (tipo === 'UPC-A') {
+            return '0' + codigo; // Adiciona um zero no início
+        }
+    } else if (formatoAlvo === 'UPC-A') {
+        if (tipo === 'EAN-13' && codigo.startsWith('0')) {
+            return codigo.substring(1); // Remove o primeiro zero
+        }
+    } else if (formatoAlvo === 'ISBN-13' && tipo === 'ISBN-10') {
+        // Converte ISBN-10 para ISBN-13
+        const isbnBase = '978' + codigo.substring(0, 9);
+        const digitoVerificador = calcularDigitoVerificador(isbnBase);
+        return isbnBase + digitoVerificador;
+    } else if (formatoAlvo === 'ISBN-10' && tipo === 'ISBN-13' && 
+              (codigo.startsWith('978') || codigo.startsWith('979'))) {
+        // Converte ISBN-13 para ISBN-10 (apenas para códigos que começam com 978/979)
+        const isbnBase = codigo.substring(3, 12);
+        let soma = 0;
+        for (let i = 0; i < 9; i++) {
+            soma += parseInt(isbnBase[i]) * (10 - i);
+        }
+        const digito = (11 - (soma % 11)) % 11;
+        return isbnBase + (digito === 10 ? 'X' : digito);
+    }
+    
+    // Se não houver conversão suportada, retorna o código original
+    return codigo;
+}
+
+// Normaliza um código de barras para o formato mais comum (EAN-13 quando possível)
+function normalizarCodigo(codigo) {
+    const { tipo } = validarCodigoBarras(codigo);
+    
+    switch (tipo) {
+        case 'UPC-A':
+            return '0' + codigo; // Converte para EAN-13
+        case 'ISBN-10':
+            return converterCodigo(codigo, 'ISBN-13');
+        default:
+            return codigo;
+    }
+}
+
+// Função para converter entre formatos e atualizar a busca
+function converterEAtualizar(codigoAtual, novoFormato) {
+    event.preventDefault();
+    const novoCodigo = converterCodigo(codigoAtual, novoFormato);
+    if (novoCodigo !== codigoAtual) {
+        document.getElementById('searchBarcode').value = novoCodigo;
+        buscarProduto();
+    }
+    return false;
+}
+
+function gerarCodigos() {
+    let countryCode = document.getElementById("countrySelect").value;
+    let codigoBase = document.getElementById("codigoBase").value.replace(/\D/g, "");
+    if (codigoBase.length < 1 || codigoBase.length > 8) {
+        alert("✏️ Insira um código do produto com até 8 dígitos.");
+        return;
+    }
+    let base = countryCode + codigoBase.padStart(8, "0");
+    let lista = document.getElementById("listaCodigos");
+    lista.innerHTML = "";
+    for (let i = 0; i < 10; i++) {
+        let codigo12 = base.slice(0, 11) + i.toString();
+        let dv = calcularDigitoVerificador(codigo12);
+        let codigoCompleto = codigo12 + dv;
+        let li = document.createElement("li");
+        li.textContent = codigoCompleto;
+        lista.appendChild(li);
+    }
+}
+
+async function buscarProduto() {
+    let codigoInput = document.getElementById("searchBarcode").value.trim();
+    let resultado = document.getElementById("searchResult");
+    
+    // Valida o código de barras
+    const validacao = validarCodigoBarras(codigoInput);
+    if (!validacao.valido) {
+        resultado.innerHTML = `<p class='error'>✏️ ${validacao.mensagem || 'Código de barras inválido'}</p>`;
+        return;
+    }
+    
+    // Normaliza o código para o formato mais comum
+    const codigo = normalizarCodigo(validacao.codigo);
+    const tipoCodigo = identificarTipoCodigo(codigo);
+    
+    // Atualiza a interface para mostrar o tipo de código detectado
+    document.getElementById('barcode-type').textContent = `Tipo: ${tipoCodigo}`;
+
+    // Mostrar estado de carregamento
+    resultado.innerHTML = `
+        <div class="loading">
+            <div class="spinner"></div>
+            <div class="searching-message">
+                <p>🔍 Buscando informações do produto...</p>
+                <p class="searching-sources">Código: ${codigo} (${tipoCodigo})</p>
+                <p class="searching-sources">Consultando fontes disponíveis...</p>
+            </div>
+            <div class="barcode-formats">
+                <small>Formatos alternativos: 
+                    ${['EAN-13', 'UPC-A', 'ISBN-13', 'ISBN-10'].map(fmt => 
+                        `<a href="#" onclick="event.preventDefault(); converterEAtualizar('${codigo}', '${fmt}');">${fmt}</a>`
+                    ).join(' | ')}
+                </small>
+            </div>
+        </div>
+    `;
+
+    try {
+        // Array de todas as funções de busca
+        const searchFunctions = [
+            searchOpenFoodFacts,
+            searchUpcItemDb,
+            searchGoogleShopping,
+            searchWwWOpenProductData,
+            searchUpcDatabase,
+            searchGoogleShoppingScraper
+        ];
+        
+        // Se for um ISBN, prioriza as APIs de livros
+        if (tipoCodigo.includes('ISBN')) {
+            searchFunctions.unshift(searchGoogleBooks);
+            searchFunctions.unshift(searchOpenLibrary);
+        }
+
+        let productInfo = { found: false };
+        let currentSearchIndex = 0;
+
+        // Função para tentar a próxima busca
+        const tryNextSearch = async () => {
+            if (currentSearchIndex >= searchFunctions.length) return false;
+            
+            const searchFunc = searchFunctions[currentSearchIndex];
+            const sourceName = searchFunc.name.replace('search', '').replace(/([A-Z])/g, ' $1').trim();
+            
+            // Atualiza a mensagem mostrando qual fonte está sendo consultada
+            const searchingElement = document.querySelector('.searching-sources');
+            if (searchingElement) {
+                searchingElement.textContent = `Consultando: ${sourceName}...`;
+            }
+            
+            try {
+                const result = await searchFunc(codigo);
+                if (result.found) {
+                    return result;
+                }
+            } catch (error) {
+                console.error(`Erro na busca ${sourceName}:`, error);
+            }
+            
+            currentSearchIndex++;
+            return tryNextSearch();
+        };
+
+        // Inicia a cadeia de buscas
+        productInfo = await tryNextSearch();
+        
+        if (productInfo.found) {
+            resultado.innerHTML = formatProductInfo(productInfo);
+        } else {
+            resultado.innerHTML = `
+                <div class='product-not-found'>
+                    <p>❌ Produto não encontrado nas bases de dados.</p>
+                    <p>Você pode tentar pesquisar em outros sites:</p>
+                    <ul>
+                        <li><a href='https://www.google.com/search?q=${codigo}+barcode' target='_blank'>Pesquisar no Google</a></li>
+                        <li><a href='https://www.barcodelookup.com/${codigo}' target='_blank'>Barcode Lookup</a></li>
+                        <li><a href='https://www.upcitemdb.com/upc/${codigo}' target='_blank'>UPC ItemDB</a></li>
+                        <li><a href='https://www.google.com/shopping/product/1?q=${codigo}' target='_blank'>Google Shopping</a></li>
+                        <li><a href='https://barcodes.tec-it.com/pt/?barcode=${codigo}' target='_blank'>TEC-IT Barcode</a></li>
+                    </ul>
+                </div>
+            `;
+        }
+    } catch (error) {
+        console.error('Erro ao buscar produto:', error);
+        resultado.innerHTML = `
+            <div class='error'>
+                <p>⚠️ Ocorreu um erro ao buscar o produto.</p>
+                <p>Detalhes: ${error.message || 'Erro desconhecido'}</p>
+                <p>Tente novamente mais tarde ou verifique sua conexão com a internet.</p>
+            </div>
+        `;
+    }
+}
+
+async function searchOpenFoodFacts(barcode) {
+    try {
+        const response = await fetch(`https://world.openfoodfacts.org/api/v0/product/${barcode}.json`);
+        const data = await response.json();
+        
+        if (data.status === 1) {
+            const product = data.product;
+            return {
+                found: true,
+                name: product.product_name || 'Produto não identificado',
+                brand: product.brands || 'Marca não especificada',
+                category: product.categories || 'Categoria não especificada',
+                image: product.image_url || '',
+                details: {
+                    quantidade: product.quantity || 'Não informado',
+                    países: product.countries || 'Não informado',
+                    ingredientes: product.ingredients_text || 'Não disponível',
+                    'código de barras': barcode
+                },
+                source: 'Open Food Facts',
+                barcode: barcode
+            };
+        }
+    } catch (error) {
+        console.error('Erro na API Open Food Facts:', error);
+    }
+    return { found: false };
+}
+
+
+
+// Função de busca na API do UPC ItemDB via proxy
+async function searchUpcItemDb(barcode) {
+    try {
+        const response = await fetch(`/api/upc-itemdb/${barcode}`);
+        const data = await response.json();
+        
+        if (data.code === 'OK' && data.items && data.items.length > 0) {
+            const item = data.items[0];
+            return {
+                found: true,
+                name: item.title || 'Produto não identificado',
+                brand: item.brand || 'Marca não especificada',
+                category: item.category || 'Categoria não especificada',
+                image: item.images && item.images.length > 0 ? item.images[0] : '',
+                details: {
+                    descrição: item.description || 'Não disponível',
+                    'código de barras': barcode,
+                    'preço médio': item.lowest_recorded_price ? `$${item.lowest_recorded_price} - $${item.highest_recorded_price}` : 'Não disponível',
+                    'cor': item.color || 'Não especificado',
+                    'dimensões': item.dimension || 'Não disponível',
+                    'peso': item.weight || 'Não disponível'
+                },
+                source: 'UPC ItemDB',
+                barcode: barcode
+            };
+        }
+    } catch (error) {
+        console.error('Erro na API UPC ItemDB:', error);
+    }
+    return { found: false };
+}
+
+// Função de busca na API do Google Shopping (via RapidAPI)
+async function searchGoogleShopping(barcode) {
+    try {
+        const options = {
+            method: 'GET',
+            headers: {
+                'x-rapidapi-key': '497a68a614msh6e2d3b3f0609093p12ba49jsnfc0a5338235f', // Em produção, use uma variável de ambiente
+                'x-rapidapi-host': 'google-data-scraper.p.rapidapi.com'
+            },
+            credentials: 'include'
+        };
+        
+        const response = await fetch(`https://google-data-scraper.p.rapidapi.com/search/shop/${encodeURIComponent(barcode)}`, options);
+        const data = await response.json();
+        
+        console.log('Resposta da API Google Shopping:', data); // Para depuração
+        
+        // Verifica se a resposta tem a estrutura esperada
+        if (data && data.shopping_results && data.shopping_results.length > 0) {
+            const product = data.shopping_results[0];
+            return {
+                found: true,
+                name: product.title || 'Produto não identificado',
+                brand: product.source || 'Marca não especificada',
+                category: product.extracted_category || 'Categoria não especificada',
+                image: product.thumbnail || '',
+                details: {
+                    preço: product.price_raw || 'Não disponível',
+                    loja: product.source || 'Não especificada',
+                    avaliação: product.rating ? `${product.rating}/5` : 'Não avaliado',
+                    'código de barras': barcode,
+                    'link': product.link || ''
+                },
+                source: 'Google Shopping',
+                barcode: barcode
+            };
+        }
+    } catch (error) {
+        console.error('Erro na API Google Shopping:', error);
+    }
+    return { found: false };
+}
+
+// Função de busca na World Wide Open Product Database
+async function searchWwWOpenProductData(barcode) {
+    try {
+        const response = await fetch(`https://world.openproductdata.com/api/v0/product/${barcode}.json`);
+        const data = await response.json();
+        
+        if (data.status === 'success' && data.product) {
+            const product = data.product;
+            return {
+                found: true,
+                name: product.product_name || 'Produto não identificado',
+                brand: product.brands || 'Marca não especificada',
+                category: product.categories || 'Categoria não especificada',
+                image: product.image_url || '',
+                details: {
+                    quantidade: product.quantity || 'Não informado',
+                    'países disponíveis': product.countries || 'Não informado',
+                    'código de barras': barcode
+                },
+                source: 'World Wide Open Product Database',
+                barcode: barcode
+            };
+        }
+    } catch (error) {
+        console.error('Erro na API World Wide Open Product Database:', error);
+    }
+    return { found: false };
+}
+
+// Função de busca na API Google Shopping Scraper (via RapidAPI)
+async function searchGoogleShoppingScraper(barcode) {
+    try {
+        const options = {
+            method: 'GET',
+            headers: {
+                'x-rapidapi-key': '497a68a614msh6e2d3b3f0609093p12ba49jsnfc0a5338235f', // Em produção, use uma variável de ambiente
+                'x-rapidapi-host': 'google-shopping-scraper2.p.rapidapi.com'
+            },
+            credentials: 'include'
+        };
+        
+        const response = await fetch(`https://google-shopping-scraper2.p.rapidapi.com/products?q=${encodeURIComponent(barcode)}&country=br&language=pt-br`, options);
+        const data = await response.json();
+        
+        console.log('Resposta da API Google Shopping Scraper:', data); // Para depuração
+        
+        if (data.data && data.data.length > 0) {
+            const product = data.data[0];
+            return {
+                found: true,
+                name: product.title || 'Produto não identificado',
+                brand: product.brand || 'Marca não especificada',
+                category: product.category || 'Categoria não especificada',
+                image: product.image || '',
+                details: {
+                    preço: product.price ? `R$ ${product.price}` : 'Preço não disponível',
+                    loja: product.seller || 'Loja não especificada',
+                    avaliação: product.rating ? `${product.rating} estrelas` : 'Não avaliado',
+                    'código de barras': barcode,
+                    'disponibilidade': product.availability || 'Disponibilidade não informada',
+                    'frete grátis': product.free_shipping ? 'Sim' : 'Não'
+                },
+                source: 'Google Shopping Scraper',
+                barcode: barcode,
+                productUrl: product.url || ''
+            };
+        }
+    } catch (error) {
+        console.error('Erro na API Google Shopping Scraper:', error);
+    }
+    return { found: false };
+}
+
+// Função de busca na API do Google Books
+async function searchGoogleBooks(isbn) {
+    try {
+        const response = await fetch(`https://www.googleapis.com/books/v1/volumes?q=isbn:${isbn}`);
+        const data = await response.json();
+        
+        if (data.totalItems > 0 && data.items && data.items.length > 0) {
+            const book = data.items[0].volumeInfo;
+            return {
+                found: true,
+                name: book.title || 'Livro não identificado',
+                brand: book.publisher || 'Editora não especificada',
+                category: book.categories ? book.categories.join(', ') : 'Livro',
+                image: book.imageLinks ? book.imageLinks.thumbnail : '',
+                details: {
+                    autores: book.authors ? book.authors.join(', ') : 'Autor desconhecido',
+                    'ano de publicação': book.publishedDate || 'Não informado',
+                    'número de páginas': book.pageCount ? `${book.pageCount} páginas` : 'Não informado',
+                    idioma: book.language ? book.language.toUpperCase() : 'Não informado',
+                    'código ISBN': isbn,
+                    'descrição': book.description ? 
+                        (book.description.length > 200 ? 
+                         book.description.substring(0, 200) + '...' : 
+                         book.description) : 
+                        'Descrição não disponível'
+                },
+                source: 'Google Books',
+                barcode: isbn
+            };
+        }
+    } catch (error) {
+        console.error('Erro na API Google Books:', error);
+    }
+    return { found: false };
+}
+
+// Função de busca na Open Library
+async function searchOpenLibrary(isbn) {
+    try {
+        const response = await fetch(`https://openlibrary.org/api/books?bibkeys=ISBN:${isbn}&format=json&jscmd=data`);
+        const data = await response.json();
+        const bookKey = `ISBN:${isbn}`;
+        
+        if (data[bookKey]) {
+            const book = data[bookKey];
+            return {
+                found: true,
+                name: book.title || 'Livro não identificado',
+                brand: book.publishers ? book.publishers.map(p => p.name).join(', ') : 'Editora não especificada',
+                category: book.subjects ? book.subjects.map(s => s.name).join(', ') : 'Livro',
+                image: book.cover ? book.cover.medium || book.cover.large || '' : '',
+                details: {
+                    autores: book.authors ? book.authors.map(a => a.name).join(', ') : 'Autor desconhecido',
+                    'ano de publicação': book.publish_date || 'Não informado',
+                    'número de páginas': book.number_of_pages ? `${book.number_of_pages} páginas` : 'Não informado',
+                    'código ISBN': isbn,
+                    'identificadores': book.identifiers ? 
+                        Object.entries(book.identifiers).map(([key, value]) => 
+                            `${key}: ${value.join(', ')}`).join(' | ') : 
+                        'Não disponível'
+                },
+                source: 'Open Library',
+                barcode: isbn
+            };
+        }
+    } catch (error) {
+        console.error('Erro na API Open Library:', error);
+    }
+    return { found: false };
+}
+
+// Função de busca na API do UPCDatabase.org
+async function searchUpcDatabase(barcode) {
+    try {
+        const response = await fetch(`https://api.upcdatabase.org/product/${barcode}?apikey=${process.env.UPC_DATABASE_KEY}`);
+        const data = await response.json();
+        
+        if (data.valid === true) {
+            return {
+                found: true,
+                name: data.title || 'Produto não identificado',
+                brand: data.brand || 'Marca não especificada',
+                category: data.category || 'Categoria não especificada',
+                image: data.image || '',
+                details: {
+                    descrição: data.description || 'Não disponível',
+                    'código de barras': barcode,
+                    'tamanho': data.size || 'Não especificado',
+                    'cor': data.color || 'Não especificado',
+                    'preço': data.msrp ? `$${data.msrp}` : 'Não disponível'
+                },
+                source: 'UPC Database',
+                barcode: barcode
+            };
+        }
+    } catch (error) {
+        console.error('Erro na API UPC Database:', error);
+    }
+    return { found: false };
+}
+
+function formatProductInfo(productInfo) {
+    let detailsHtml = '';
+    for (const [key, value] of Object.entries(productInfo.details)) {
+        detailsHtml += `<p><strong>${key}:</strong> ${value}</p>`;
+    }
+    
+    // Adiciona link para o produto se disponível
+    const productLink = productInfo.productUrl ? 
+        `<p class='product-link'><a href='${productInfo.productUrl}' target='_blank' class='btn'>Ver no Google Shopping →</a></p>` : '';
+    
+    return `
+        <div class='product-info'>
+            <div class='product-header'>
+                ${productInfo.image ? `<img src='${productInfo.image}' alt='${productInfo.name}' class='product-image' />` : ''}
+                <div>
+                    <h3>${productInfo.name}</h3>
+                    <p><strong>Marca:</strong> ${productInfo.brand}</p>
+                    <p><strong>Categoria:</strong> ${productInfo.category}</p>
+                    <p><small>Fonte: ${productInfo.source}</small></p>
+                    ${productLink}
+                </div>
+            </div>
+            <div class='product-details'>
+                ${detailsHtml}
+            </div>
+        </div>
+    `;
+}
+
+function gerarCodigoPersonalizado() {
+    let countryCode = document.getElementById("customCountrySelect").value;
+    let productCode = document.getElementById("customProductCode").value.replace(/\D/g, "");
+    if (productCode.length < 1 || productCode.length > 8) {
+        alert("✏️ Insira um código do produto com até 8 dígitos.");
+        return;
+    }
+    let base = countryCode + productCode.padStart(8, "0");
+    let codigo12 = base.slice(0, 11) + "0"; // last digit before check digit set to 0
+    let dv = calcularDigitoVerificador(codigo12);
+    let codigoCompleto = codigo12 + dv;
+    let resultado = document.getElementById("customCodeResult");
+    resultado.textContent = "Código de Barras Gerado: " + codigoCompleto;
+}
+
+// Função para filtrar a lista de países
+function setupCountrySearch() {
+    const searchInput = document.getElementById('countrySearch');
+    const countrySelect = document.getElementById('countrySelect');
+    const options = Array.from(countrySelect.options);
+    
+    // Armazena todas as opções originais
+    const originalOptions = options.map(option => ({
+        value: option.value,
+        text: option.text,
+        element: option
+    }));
+    
+    // Função para filtrar as opções
+    function filterOptions(searchTerm) {
+        const term = searchTerm.toLowerCase().trim();
+        
+        // Remove todas as opções atuais
+        while (countrySelect.options.length > 0) {
+            countrySelect.remove(0);
+        }
+        
+        // Filtra as opções originais
+        const filteredOptions = originalOptions.filter(option => 
+            option.text.toLowerCase().includes(term) || 
+            option.value.includes(term)
+        );
+        
+        // Adiciona as opções filtradas de volta ao select
+        filteredOptions.forEach(option => {
+            countrySelect.add(option.element);
+        });
+        
+        // Se não houver resultados, mostra uma mensagem
+        if (filteredOptions.length === 0) {
+            const noResults = document.createElement('option');
+            noResults.value = '';
+            noResults.textContent = 'Nenhum país encontrado';
+            noResults.disabled = true;
+            countrySelect.add(noResults);
+        }
+    }
+    
+    // Adiciona o evento de input para a busca
+    searchInput.addEventListener('input', (e) => {
+        filterOptions(e.target.value);
+    });
+    
+    // Adiciona foco ao campo de busca quando a página carrega
+    searchInput.focus();
+}
+
+// Inicializa a busca de países quando o DOM estiver pronto
+document.addEventListener('DOMContentLoaded', setupCountrySearch);
+
+// Barcode scanner using QuaggaJS
+let scannerRunning = false;
+let lastScannedCode = '';
+let lastScanTime = 0;
+
+function iniciarScanner() {
+    if (scannerRunning) {
+        return;
+    }
+    
+    // Limpar resultados anteriores e adicionar container para o scanner
+    const scannerContainer = document.getElementById('scannerContainer');
+    scannerContainer.innerHTML = `
+        <div id="interactive" class="viewport">
+            <div class="overlay">
+                <div class="scanline"></div>
+            </div>
+            <div class="detection-info">Aponte para um código de barras</div>
+        </div>
+    `;
+    
+    document.getElementById("scannerResult").innerHTML = "<p>Iniciando câmera... Por favor, permita o acesso à câmera quando solicitado.</p>";
+    scannerRunning = true;
+    
+    // Configuração do QuaggaJS
+    Quagga.init({
+        inputStream: {
+            name: "Live",
+            type: "LiveStream",
+            target: document.querySelector('#interactive'),
+            constraints: {
+                width: { ideal: 1280 },
+                height: { ideal: 720 },
+                aspectRatio: 4/3,
+                facingMode: "environment"
+            },
+            area: {
+                top: "0%",
+                right: "0%",
+                left: "0%",
+                bottom: "0%"
+            }
+        },
+        decoder: {
+            readers: ["ean_reader", "ean_8_reader", "code_128_reader", "code_39_reader", "code_39_vin_reader", "codabar_reader", "upc_reader", "upc_e_reader"]
+        },
+        locator: {
+            halfSample: true,
+            patchSize: "medium",
+            debug: {
+                showCanvas: false,
+                showPatches: false,
+                showFoundPatches: false,
+                showSkeleton: false,
+                showLabels: false,
+                showPatchLabels: false,
+                showRemainingPatchLabels: false,
+                boxFromPatches: {
+                    showTransformed: false,
+                    showTransformedBox: false,
+                    showBB: false
+                }
+            }
+        },
+        frequency: 10,
+        debug: false,
+        multiple: false
+    }, function (err) {
+        if (err) {
+            console.error("Erro ao inicializar o scanner:", err);
+            document.querySelector('.detection-info').textContent = 'Erro ao acessar a câmera';
+            return;
+        }
+
+        // Configura o desenho do retângulo de detecção
+        Quagga.onProcessed(function(result) {
+            try {
+                const drawingCtx = Quagga.canvas.ctx.overlay;
+                const drawingCanvas = Quagga.canvas.dom.overlay;
+                
+                if (drawingCtx && drawingCanvas) {
+                    drawingCtx.clearRect(0, 0, parseInt(drawingCanvas.width), parseInt(drawingCanvas.height));
+                    
+                    if (result) {
+                        if (result.boxes) {
+                            result.boxes.filter(function(box) {
+                                return box !== result.box;
+                            }).forEach(function(box) {
+                                Quagga.ImageDebug.drawPath(box, {x: 0, y: 1}, drawingCtx, {color: "green", lineWidth: 2});
+                            });
+                        }
+                        
+                        if (result.box) {
+                            Quagga.ImageDebug.drawPath(result.box, {x: 0, y: 1}, drawingCtx, {color: "#00F", lineWidth: 2});
+                        }
+                        
+                        if (result.codeResult && result.codeResult.code) {
+                            Quagga.ImageDebug.drawPath(result.line, {x: 'x', y: 'y'}, drawingCtx, {color: 'red', lineWidth: 3});
+                        }
+                    }
+                }
+            } catch (e) {
+                console.error("Erro ao processar frame:", e);
+            }
+        });
+        
+        Quagga.start().then(() => {
+            // Atualizar a interface quando a câmera estiver pronta
+            const scannerContainer = document.getElementById('scannerContainer');
+            if (scannerContainer) {
+                scannerContainer.innerHTML = `
+                    <div id="interactive" class="viewport">
+                        <p style="color: white; text-align: center; margin-top: 20px;">
+                            Aponte para um código de barras
+                        </p>
+                    </div>
+                `;
+            }
+            document.getElementById("scannerResult").innerHTML = "<p>Scanner ativo. Aponte para um código de barras.</p>";
+        }).catch(err => {
+            console.error("Erro ao iniciar o scanner:", err);
+            document.getElementById("scannerResult").innerHTML = "<p>Erro ao acessar a câmera. Por favor, verifique as permissões e tente novamente.</p>";
+            scannerRunning = false;
+        });
+    });
+
+    // Quando um código for detectado
+    Quagga.onDetected(function(result) {
+        const code = result.codeResult.code;
+        const now = new Date().getTime();
+        
+        // Evitar leituras duplicadas muito próximas no tempo (500ms)
+        if (code === lastScannedCode && (now - lastScanTime < 500)) {
+            return;
+        }
+        
+        lastScannedCode = code;
+        lastScanTime = now;
+        
+        // Atualizar o campo de busca e pesquisar
+        const searchInput = document.getElementById("searchBarcode");
+        if (searchInput) {
+            searchInput.value = code;
+            // Disparar o evento de input para atualizar a interface
+            searchInput.dispatchEvent(new Event('input'));
+            
+            // Atualizar feedback visual
+            const scannerContainer = document.getElementById('scannerContainer');
+            if (scannerContainer) {
+                scannerContainer.innerHTML = `
+                    <div style="color: white; text-align: center; padding: 20px;">
+                        <h3>Código detectado:</h3>
+                        <div style="font-size: 1.5em; margin: 10px 0; font-weight: bold;">${code}</div>
+                        <p>Pesquisando informações...</p>
+                    </div>
+                `;
+            }
+            
+            // Pesquisar automaticamente após um pequeno atraso
+            setTimeout(() => {
+                buscarProduto();
+            }, 300);
+        }
+    });
+}
+
+function pararScanner() {
+    if (scannerRunning) {
+        try {
+            Quagga.stop();
+            const scannerContainer = document.getElementById('scannerContainer');
+            if (scannerContainer) {
+                scannerContainer.innerHTML = `
+                    <div style="color: white; text-align: center; padding: 20px;">
+                        <p>Scanner desativado. Clique em "Iniciar Scanner" para ativar novamente.</p>
+                    </div>
+                `;
+            }
+            document.getElementById("scannerResult").innerHTML = "<p>Scanner desativado.</p>";
+        } catch (error) {
+            console.error("Erro ao parar o scanner:", error);
+            document.getElementById("scannerResult").innerHTML = "<p>Ocorreu um erro ao desativar o scanner.</p>";
+        } finally {
+            scannerRunning = false;
+        }
+    }
+}
