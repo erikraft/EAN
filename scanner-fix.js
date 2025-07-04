@@ -7,36 +7,36 @@ window.pararScanner = function() {
     }
     window.scannerRunning = false;
     window.isCameraPaused = false;
-    
+
     const scannerContainer = document.getElementById('scannerContainer');
     if (scannerContainer) {
         scannerContainer.innerHTML = '';
     }
-    
+
     updateScannerButtons('initial');
 };
 
 window.pausarCamera = function() {
     if (!window.scannerRunning || window.isCameraPaused) return;
-    
+
     const video = document.querySelector('#scannerVideo');
     if (video) {
         video.pause();
     }
-    
+
     if (window.Quagga) {
         Quagga.pause();
     }
-    
+
     window.isCameraPaused = true;
     updateScannerButtons('paused');
-    
+
     const cameraStatus = document.getElementById('cameraStatus');
     if (cameraStatus) {
         cameraStatus.innerHTML = '<i class="fas fa-pause"></i> Câmera Pausada';
         cameraStatus.style.color = '#ffa500';
     }
-    
+
     const indicator = document.getElementById('cameraStatusIndicator');
     if (indicator) {
         indicator.style.background = '#ffa500';
@@ -47,25 +47,25 @@ window.pausarCamera = function() {
 
 window.retomarCamera = function() {
     if (!window.scannerRunning || !window.isCameraPaused) return;
-    
+
     const video = document.querySelector('#scannerVideo');
     if (video) {
         video.play().catch(e => console.error('Erro ao retomar o vídeo:', e));
     }
-    
+
     if (window.Quagga) {
         Quagga.start();
     }
-    
+
     window.isCameraPaused = false;
     updateScannerButtons('active');
-    
+
     const cameraStatus = document.getElementById('cameraStatus');
     if (cameraStatus) {
         cameraStatus.innerHTML = '<i class="fas fa-video"></i> Câmera Ativa';
         cameraStatus.style.color = '#4CAF50';
     }
-    
+
     const indicator = document.getElementById('cameraStatusIndicator');
     if (indicator) {
         indicator.style.background = '#4CAF50';
@@ -137,23 +137,23 @@ Quagga.init(config, function(err) {
     console.log('Scanner inicializado com sucesso');
     window.scannerRunning = true;
     window.isCameraPaused = false;
-    
+
     // Atualizar a interface
     updateScannerButtons('active');
-    
+
     // Garantir que o vídeo está visível
     const video = document.querySelector('#scannerVideo');
     if (video) {
         video.style.display = 'block';
     }
-    
+
     // Atualizar o status da câmera
     const cameraStatus = document.getElementById('cameraStatus');
     if (cameraStatus) {
         cameraStatus.innerHTML = '<i class="fas fa-video"></i> Câmera Ativa';
         cameraStatus.style.color = '#4CAF50';
     }
-    
+
     // Atualizar o indicador de status
     const indicator = document.getElementById('cameraStatusIndicator');
     if (indicator) {
@@ -161,16 +161,16 @@ Quagga.init(config, function(err) {
         indicator.style.boxShadow = '0 0 10px #4CAF50';
         indicator.style.animation = 'pulse 2s infinite';
     }
-    
+
     // Iniciar a detecção
     Quagga.start();
-    
+
     // Configurar o manipulador de códigos detectados
     Quagga.onDetected(function(result) {
         if (result.codeResult && result.codeResult.code) {
             const code = result.codeResult.code;
             console.log('Código detectado:', code);
-            
+
             // Processar o código com debounce
             if (window.debounceScan && window.processBarcode) {
                 window.debounceScan(code, window.processBarcode);

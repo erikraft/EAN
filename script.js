@@ -11,19 +11,19 @@ function calcularDigitoVerificador(codigo) {
 function validarCodigoBarras(codigo) {
     // Remove todos os caracteres não numéricos
     const codigoLimpo = codigo.replace(/\D/g, '');
-    
+
     // Verifica o comprimento
     if (codigoLimpo.length < 8 || codigoLimpo.length > 13) {
         return { valido: false, mensagem: 'O código deve ter entre 8 e 13 dígitos' };
     }
-    
+
     // Verifica se são apenas números
     if (!/^\d+$/.test(codigoLimpo)) {
         return { valido: false, mensagem: 'O código deve conter apenas números' };
     }
-    
-    return { 
-        valido: true, 
+
+    return {
+        valido: true,
         codigo: codigoLimpo,
         tipo: identificarTipoCodigo(codigoLimpo)
     };
@@ -32,13 +32,13 @@ function validarCodigoBarras(codigo) {
 // Identifica o tipo de código de barras
 function identificarTipoCodigo(codigo) {
     const len = codigo.length;
-    
+
     // ISBN-10 (10 dígitos)
     if (len === 10) return 'ISBN-10';
-    
+
     // UPC-A (12 dígitos)
     if (len === 12) return 'UPC-A';
-    
+
     // EAN-13 (13 dígitos)
     if (len === 13) {
         // Verifica se é um ISBN-13 (começa com 978 ou 979)
@@ -47,10 +47,10 @@ function identificarTipoCodigo(codigo) {
         }
         return 'EAN-13';
     }
-    
+
     // EAN-8 (8 dígitos)
     if (len === 8) return 'EAN-8';
-    
+
     // Outros formatos
     return `Código de ${len} dígitos`;
 }
@@ -58,10 +58,10 @@ function identificarTipoCodigo(codigo) {
 // Converte entre formatos de código de barras
 function converterCodigo(codigo, formatoAlvo) {
     const { tipo } = validarCodigoBarras(codigo);
-    
+
     // Se já está no formato desejado, retorna o código original
     if (tipo === formatoAlvo) return codigo;
-    
+
     // Conversões suportadas
     if (formatoAlvo === 'EAN-13') {
         if (tipo === 'UPC-A') {
@@ -76,7 +76,7 @@ function converterCodigo(codigo, formatoAlvo) {
         const isbnBase = '978' + codigo.substring(0, 9);
         const digitoVerificador = calcularDigitoVerificador(isbnBase);
         return isbnBase + digitoVerificador;
-    } else if (formatoAlvo === 'ISBN-10' && tipo === 'ISBN-13' && 
+    } else if (formatoAlvo === 'ISBN-10' && tipo === 'ISBN-13' &&
               (codigo.startsWith('978') || codigo.startsWith('979'))) {
         // Converte ISBN-13 para ISBN-10 (apenas para códigos que começam com 978/979)
         const isbnBase = codigo.substring(3, 12);
@@ -87,7 +87,7 @@ function converterCodigo(codigo, formatoAlvo) {
         const digito = (11 - (soma % 11)) % 11;
         return isbnBase + (digito === 10 ? 'X' : digito);
     }
-    
+
     // Se não houver conversão suportada, retorna o código original
     return codigo;
 }
@@ -95,7 +95,7 @@ function converterCodigo(codigo, formatoAlvo) {
 // Normaliza um código de barras para o formato mais comum (EAN-13 quando possível)
 function normalizarCodigo(codigo) {
     const { tipo } = validarCodigoBarras(codigo);
-    
+
     switch (tipo) {
         case 'UPC-A':
             return '0' + codigo; // Converte para EAN-13
@@ -140,18 +140,18 @@ function gerarCodigos() {
 async function buscarProduto() {
     let codigoInput = document.getElementById("searchBarcode").value.trim();
     let resultado = document.getElementById("searchResult");
-    
+
     // Valida o código de barras
     const validacao = validarCodigoBarras(codigoInput);
     if (!validacao.valido) {
         resultado.innerHTML = `<p class='error'>✏️ ${validacao.mensagem || 'Código de barras inválido'}</p>`;
         return;
     }
-    
+
     // Normaliza o código para o formato mais comum
     const codigo = normalizarCodigo(validacao.codigo);
     const tipoCodigo = identificarTipoCodigo(codigo);
-    
+
     // Atualiza a interface para mostrar o tipo de código detectado
     document.getElementById('barcode-type').textContent = `Tipo: ${tipoCodigo}`;
 
@@ -165,8 +165,8 @@ async function buscarProduto() {
                 <p class="searching-sources">Consultando fontes disponíveis...</p>
             </div>
             <div class="barcode-formats">
-                <small>Formatos alternativos: 
-                    ${['EAN-13', 'UPC-A', 'ISBN-13', 'ISBN-10'].map(fmt => 
+                <small>Formatos alternativos:
+                    ${['EAN-13', 'UPC-A', 'ISBN-13', 'ISBN-10'].map(fmt =>
                         `<a href="#" onclick="event.preventDefault(); converterEAtualizar('${codigo}', '${fmt}');">${fmt}</a>`
                     ).join(' | ')}
                 </small>
@@ -184,7 +184,7 @@ async function buscarProduto() {
             searchUpcDatabase,
             searchGoogleShoppingScraper
         ];
-        
+
         // Se for um ISBN, prioriza as APIs de livros
         if (tipoCodigo.includes('ISBN')) {
             searchFunctions.unshift(searchGoogleBooks);
@@ -197,16 +197,16 @@ async function buscarProduto() {
         // Função para tentar a próxima busca
         const tryNextSearch = async () => {
             if (currentSearchIndex >= searchFunctions.length) return false;
-            
+
             const searchFunc = searchFunctions[currentSearchIndex];
             const sourceName = searchFunc.name.replace('search', '').replace(/([A-Z])/g, ' $1').trim();
-            
+
             // Atualiza a mensagem mostrando qual fonte está sendo consultada
             const searchingElement = document.querySelector('.searching-sources');
             if (searchingElement) {
                 searchingElement.textContent = `Consultando: ${sourceName}...`;
             }
-            
+
             try {
                 const result = await searchFunc(codigo);
                 if (result.found) {
@@ -215,14 +215,14 @@ async function buscarProduto() {
             } catch (error) {
                 console.error(`Erro na busca ${sourceName}:`, error);
             }
-            
+
             currentSearchIndex++;
             return tryNextSearch();
         };
 
         // Inicia a cadeia de buscas
         productInfo = await tryNextSearch();
-        
+
         if (productInfo.found) {
             resultado.innerHTML = formatProductInfo(productInfo);
         } else {
@@ -256,7 +256,7 @@ async function searchOpenFoodFacts(barcode) {
     try {
         const response = await fetch(`https://world.openfoodfacts.org/api/v0/product/${barcode}.json`);
         const data = await response.json();
-        
+
         if (data.status === 1) {
             const product = data.product;
             return {
@@ -288,7 +288,7 @@ async function searchUpcItemDb(barcode) {
     try {
         const response = await fetch(`/api/upc-itemdb/${barcode}`);
         const data = await response.json();
-        
+
         if (data.code === 'OK' && data.items && data.items.length > 0) {
             const item = data.items[0];
             return {
@@ -326,12 +326,12 @@ async function searchGoogleShopping(barcode) {
             },
             credentials: 'include'
         };
-        
+
         const response = await fetch(`https://google-data-scraper.p.rapidapi.com/search/shop/${encodeURIComponent(barcode)}`, options);
         const data = await response.json();
-        
+
         console.log('Resposta da API Google Shopping:', data); // Para depuração
-        
+
         // Verifica se a resposta tem a estrutura esperada
         if (data && data.shopping_results && data.shopping_results.length > 0) {
             const product = data.shopping_results[0];
@@ -363,7 +363,7 @@ async function searchWwWOpenProductData(barcode) {
     try {
         const response = await fetch(`https://world.openproductdata.com/api/v0/product/${barcode}.json`);
         const data = await response.json();
-        
+
         if (data.status === 'success' && data.product) {
             const product = data.product;
             return {
@@ -398,12 +398,12 @@ async function searchGoogleShoppingScraper(barcode) {
             },
             credentials: 'include'
         };
-        
+
         const response = await fetch(`https://google-shopping-scraper2.p.rapidapi.com/products?q=${encodeURIComponent(barcode)}&country=br&language=pt-br`, options);
         const data = await response.json();
-        
+
         console.log('Resposta da API Google Shopping Scraper:', data); // Para depuração
-        
+
         if (data.data && data.data.length > 0) {
             const product = data.data[0];
             return {
@@ -436,7 +436,7 @@ async function searchGoogleBooks(isbn) {
     try {
         const response = await fetch(`https://www.googleapis.com/books/v1/volumes?q=isbn:${isbn}`);
         const data = await response.json();
-        
+
         if (data.totalItems > 0 && data.items && data.items.length > 0) {
             const book = data.items[0].volumeInfo;
             return {
@@ -451,10 +451,10 @@ async function searchGoogleBooks(isbn) {
                     'número de páginas': book.pageCount ? `${book.pageCount} páginas` : 'Não informado',
                     idioma: book.language ? book.language.toUpperCase() : 'Não informado',
                     'código ISBN': isbn,
-                    'descrição': book.description ? 
-                        (book.description.length > 200 ? 
-                         book.description.substring(0, 200) + '...' : 
-                         book.description) : 
+                    'descrição': book.description ?
+                        (book.description.length > 200 ?
+                         book.description.substring(0, 200) + '...' :
+                         book.description) :
                         'Descrição não disponível'
                 },
                 source: 'Google Books',
@@ -473,7 +473,7 @@ async function searchOpenLibrary(isbn) {
         const response = await fetch(`https://openlibrary.org/api/books?bibkeys=ISBN:${isbn}&format=json&jscmd=data`);
         const data = await response.json();
         const bookKey = `ISBN:${isbn}`;
-        
+
         if (data[bookKey]) {
             const book = data[bookKey];
             return {
@@ -487,9 +487,9 @@ async function searchOpenLibrary(isbn) {
                     'ano de publicação': book.publish_date || 'Não informado',
                     'número de páginas': book.number_of_pages ? `${book.number_of_pages} páginas` : 'Não informado',
                     'código ISBN': isbn,
-                    'identificadores': book.identifiers ? 
-                        Object.entries(book.identifiers).map(([key, value]) => 
-                            `${key}: ${value.join(', ')}`).join(' | ') : 
+                    'identificadores': book.identifiers ?
+                        Object.entries(book.identifiers).map(([key, value]) =>
+                            `${key}: ${value.join(', ')}`).join(' | ') :
                         'Não disponível'
                 },
                 source: 'Open Library',
@@ -507,7 +507,7 @@ async function searchUpcDatabase(barcode) {
     try {
         const response = await fetch(`https://api.upcdatabase.org/product/${barcode}?apikey=${process.env.UPC_DATABASE_KEY}`);
         const data = await response.json();
-        
+
         if (data.valid === true) {
             return {
                 found: true,
@@ -537,11 +537,11 @@ function formatProductInfo(productInfo) {
     for (const [key, value] of Object.entries(productInfo.details)) {
         detailsHtml += `<p><strong>${key}:</strong> ${value}</p>`;
     }
-    
+
     // Adiciona link para o produto se disponível
-    const productLink = productInfo.productUrl ? 
+    const productLink = productInfo.productUrl ?
         `<p class='product-link'><a href='${productInfo.productUrl}' target='_blank' class='btn'>Ver no Google Shopping →</a></p>` : '';
-    
+
     return `
         <div class='product-info'>
             <div class='product-header'>
@@ -581,34 +581,34 @@ function setupCountrySearch() {
     const searchInput = document.getElementById('countrySearch');
     const countrySelect = document.getElementById('countrySelect');
     const options = Array.from(countrySelect.options);
-    
+
     // Armazena todas as opções originais
     const originalOptions = options.map(option => ({
         value: option.value,
         text: option.text,
         element: option
     }));
-    
+
     // Função para filtrar as opções
     function filterOptions(searchTerm) {
         const term = searchTerm.toLowerCase().trim();
-        
+
         // Remove todas as opções atuais
         while (countrySelect.options.length > 0) {
             countrySelect.remove(0);
         }
-        
+
         // Filtra as opções originais
-        const filteredOptions = originalOptions.filter(option => 
-            option.text.toLowerCase().includes(term) || 
+        const filteredOptions = originalOptions.filter(option =>
+            option.text.toLowerCase().includes(term) ||
             option.value.includes(term)
         );
-        
+
         // Adiciona as opções filtradas de volta ao select
         filteredOptions.forEach(option => {
             countrySelect.add(option.element);
         });
-        
+
         // Se não houver resultados, mostra uma mensagem
         if (filteredOptions.length === 0) {
             const noResults = document.createElement('option');
@@ -618,12 +618,12 @@ function setupCountrySearch() {
             countrySelect.add(noResults);
         }
     }
-    
+
     // Adiciona o evento de input para a busca
     searchInput.addEventListener('input', (e) => {
         filterOptions(e.target.value);
     });
-    
+
     // Adiciona foco ao campo de busca quando a página carrega
     searchInput.focus();
 }
@@ -631,7 +631,7 @@ function setupCountrySearch() {
 // Função para verificar se o Quagga está carregado
 function waitForQuagga(callback, maxAttempts = 30, attempt = 1) {
     console.log(`Checking Quagga (attempt ${attempt}/${maxAttempts})...`);
-    
+
     if (window.quaggaLoaded && typeof Quagga !== 'undefined') {
         console.log('Quagga is loaded and ready');
         callback();
@@ -652,58 +652,58 @@ document.addEventListener('DOMContentLoaded', function() {
         // Mostra o indicador de carregamento
         const loadingIndicator = document.getElementById('loadingIndicator');
         const loadingText = document.getElementById('loadingText');
-        
+
         if (loadingIndicator) {
             loadingIndicator.style.display = 'flex';
             loadingText.textContent = 'Inicializando o aplicativo...';
         }
-        
+
         // Configura a busca de países
         setupCountrySearch();
-        
+
         // Configura os controles do scanner
         setupScannerControls();
-        
+
         // Verifica se o Quagga foi carregado corretamente
         waitForQuagga(function() {
             console.log('Quagga carregado com sucesso');
-            
+
             // Esconde o indicador de carregamento após um curto atraso
             setTimeout(() => {
                 if (loadingIndicator) {
                     loadingIndicator.style.display = 'none';
                 }
-                
+
                 // Mostra mensagem de boas-vindas
                 const welcomeMsg = document.createElement('div');
                 welcomeMsg.className = 'success-message';
                 welcomeMsg.innerHTML = '<i class="fas fa-check-circle"></i> Aplicativo pronto para uso! O scanner está carregado.';
                 document.body.prepend(welcomeMsg);
-                
+
                 // Habilita os botões do scanner
                 const scannerButtons = document.querySelectorAll('.scanner-buttons button');
                 scannerButtons.forEach(button => {
                     button.disabled = false;
                 });
-                
+
                 // Remove a mensagem após 5 segundos
                 setTimeout(() => {
                     welcomeMsg.style.opacity = '0';
                     setTimeout(() => welcomeMsg.remove(), 500);
                 }, 5000);
-                
+
             }, 500);
         });
-        
+
     } catch (error) {
         console.error('Erro durante a inicialização:', error);
-        
+
         // Mostra mensagem de erro
         const errorMsg = document.createElement('div');
         errorMsg.className = 'error-message';
         errorMsg.innerHTML = `<i class="fas fa-exclamation-triangle"></i> Erro ao inicializar o aplicativo: ${error.message || 'Erro desconhecido'}`;
         document.body.prepend(errorMsg);
-        
+
         // Esconde o indicador de carregamento em caso de erro
         const loadingIndicator = document.getElementById('loadingIndicator');
         if (loadingIndicator) {
@@ -715,7 +715,7 @@ document.addEventListener('DOMContentLoaded', function() {
 // Configura os controles do scanner
 function setupScannerControls() {
     console.log('Setting up scanner controls...');
-    
+
     const actions = {
         start: function() {
             waitForQuagga(function() {
@@ -726,62 +726,62 @@ function setupScannerControls() {
         resume: retomarCamera,
         stop: pararScanner
     };
-    
+
     const buttons = document.querySelectorAll('[data-action]');
     console.log('Found buttons:', buttons.length);
-    
+
     buttons.forEach(button => {
         const action = button.getAttribute('data-action');
         console.log('Adding listener for button:', button.id, 'with action:', action);
-        
+
         // Adiciona um listener de mouseover para verificar se o botão está visível
         button.addEventListener('mouseover', function() {
             console.log('Mouse over button:', this.id, 'display:', window.getComputedStyle(this).display);
         });
-        
+
         // Adiciona o listener de clique com tratamento de erro
         button.addEventListener('click', function(e) {
             try {
                 e.preventDefault();
                 e.stopPropagation();
-                
+
                 // Verifica se o Quagga está disponível para ações que o requerem
                 if ((action === 'start' || action === 'resume' || action === 'stop') && typeof Quagga === 'undefined') {
                     showError('O scanner ainda não foi carregado. Por favor, aguarde...');
                     return false;
                 }
-                
+
                 // Mostra feedback visual de clique
                 const originalBg = this.style.backgroundColor;
                 this.style.backgroundColor = '#e0e0e0';
                 setTimeout(() => {
                     this.style.backgroundColor = originalBg;
                 }, 200);
-                
+
                 console.log('Button clicked:', this.id, 'action:', action);
-                
+
                 if (actions[action]) {
                     console.log('Executing action:', action);
-                    
+
                     // Mostra indicador de carregamento para ações que podem demorar
                     if (['start', 'resume', 'stop'].includes(action)) {
                         const loadingText = document.getElementById('loadingText');
                         if (loadingText) {
-                            loadingText.textContent = 
-                                action === 'start' ? 'Iniciando scanner...' : 
+                            loadingText.textContent =
+                                action === 'start' ? 'Iniciando scanner...' :
                                 action === 'resume' ? 'Retomando scanner...' : 'Parando scanner...';
                             const loadingIndicator = document.getElementById('loadingIndicator');
                             if (loadingIndicator) loadingIndicator.style.display = 'flex';
                         }
                     }
-                    
+
                     // Executa a ação com tratamento de erro
                     try {
                         actions[action]();
                     } catch (error) {
                         console.error(`Erro ao executar ação ${action}:`, error);
                         showError(`Erro ao ${action} o scanner: ${error.message || 'Erro desconhecido'}`);
-                        
+
                         // Esconde o indicador de carregamento em caso de erro
                         const loadingIndicator = document.getElementById('loadingIndicator');
                         if (loadingIndicator) loadingIndicator.style.display = 'none';
@@ -793,12 +793,12 @@ function setupScannerControls() {
             } catch (error) {
                 console.error('Erro no manipulador de clique do botão:', error);
                 showError(`Erro ao processar o clique: ${error.message || 'Erro desconhecido'}`);
-                
+
                 // Esconde o indicador de carregamento em caso de erro
                 const loadingIndicator = document.getElementById('loadingIndicator');
                 if (loadingIndicator) loadingIndicator.style.display = 'none';
             }
-            
+
             return false;
         });
     });
@@ -817,18 +817,18 @@ let currentQuaggaInstance = null;
 function iniciarScanner() {
     try {
         console.log('Iniciando scanner...');
-        
+
         // Verifica se o Quagga está disponível
         if (typeof Quagga === 'undefined') {
             throw new Error('Biblioteca do scanner não carregada corretamente');
         }
-        
+
         // Verifica se já existe um scanner em execução
         if (window.quaggaInitialized) {
             console.log('Scanner já está em execução');
             return;
         }
-        
+
         // Mostra o indicador de carregamento
         const loadingText = document.getElementById('loadingText');
         const loadingIndicator = document.getElementById('loadingIndicator');
@@ -836,7 +836,7 @@ function iniciarScanner() {
             loadingText.textContent = 'Iniciando o scanner...';
             loadingIndicator.style.display = 'flex';
         }
-        
+
         // Limpa o container do scanner
         const scannerContainer = document.getElementById('scannerContainer');
         if (scannerContainer) {
@@ -849,7 +849,7 @@ function iniciarScanner() {
                     </div>
                 </div>`;
         }
-        
+
         // Configuração do Quagga
         const config = {
             inputStream: {
@@ -889,9 +889,9 @@ function iniciarScanner() {
             debug: false,
             multiple: false
         };
-        
+
         console.log('Inicializando Quagga com a configuração:', config);
-        
+
         // Adiciona o manipulador de detecção antes de iniciar
         Quagga.onDetected(function(result) {
             try {
@@ -899,20 +899,20 @@ function iniciarScanner() {
                     console.warn('Código detectado inválido:', result);
                     return;
                 }
-                
+
                 const code = result.codeResult.code;
                 console.log('Código detectado:', code);
-                
+
                 // Atualiza o campo de busca e inicia a busca
                 const searchInput = document.getElementById('searchBarcode');
                 if (searchInput) {
                     searchInput.value = code;
                     buscarProduto();
                 }
-                
+
                 // Pausa o scanner após a detecção
                 pausarCamera();
-                
+
                 // Mostra feedback visual
                 if (scannerContainer) {
                     scannerContainer.style.border = '5px solid #4CAF50';
@@ -965,15 +965,15 @@ function iniciarScanner() {
                     successMsg.style.opacity = '0';
                     setTimeout(() => successMsg.remove(), 500);
                 }, 3000);
-                
+
                 // Esconde o indicador de carregamento
                 if (loadingIndicator) loadingIndicator.style.display = 'none';
-                
+
                 return true;
             })
             .catch((error) => {
                 console.error('Erro ao iniciar o scanner:', error);
-                
+
                 let errorMessage = 'Erro ao iniciar o scanner: ';
                 if (error.message && error.message.includes('NotAllowedError')) {
                     errorMessage += 'Permissão de câmera negada. Por favor, verifique as permissões do navegador.';
@@ -984,9 +984,9 @@ function iniciarScanner() {
                 } else {
                     errorMessage += error.message || 'Erro desconhecido';
                 }
-                
+
                 showError(errorMessage);
-                
+
                 // Tenta parar o scanner em caso de erro
                 try {
                     if (typeof Quagga !== 'undefined') {
@@ -997,25 +997,25 @@ function iniciarScanner() {
                 } catch (e) {
                     console.error('Erro ao parar o scanner após erro:', e);
                 }
-                
+
                 // Reseta o estado dos botões
                 document.getElementById('startScannerBtn').style.display = 'inline-flex';
                 document.getElementById('stopScannerBtn').style.display = 'none';
                 document.getElementById('pauseScannerBtn').style.display = 'none';
                 document.getElementById('resumeScannerBtn').style.display = 'none';
-                
+
                 // Esconde o indicador de carregamento em caso de erro
                 if (loadingIndicator) loadingIndicator.style.display = 'none';
-                
+
                 return false;
             });
         } catch (error) {
             console.error('Erro inesperado ao iniciar o scanner:', error);
             showError('Ocorreu um erro inesperado ao iniciar o scanner: ' + error.message);
-            
+
             // Esconde o indicador de carregamento em caso de erro
             if (loadingIndicator) loadingIndicator.style.display = 'none';
-            
+
             return false;
         }
     } catch (error) {
@@ -1031,27 +1031,27 @@ function processarCodigoDetectado(result) {
         console.error('Resultado de leitura inválido:', result);
         return;
     }
-    
+
     const code = result.codeResult.code;
     const now = Date.now();
-    
+
     // Evita leituras duplicadas em curto período
     if (lastScanned === code && (now - lastScanTime) < 1000) {
         console.log('Leitura duplicada ignorada:', code);
         return;
     }
-    
+
     console.log('Código lido:', code);
     lastScanned = code;
     lastScanTime = now;
-    
+
     // Atualiza o campo de busca
     const barcodeInput = document.getElementById('barcode');
     if (barcodeInput) {
         barcodeInput.value = code;
         barcodeInput.focus();
         barcodeInput.select();
-        
+
         // Pesquisar automaticamente após um pequeno atraso
         setTimeout(() => {
             buscarProduto();
@@ -1065,7 +1065,7 @@ function pausarCamera() {
         console.log('Scanner não está em execução ou já está pausado');
         return;
     }
-    
+
     try {
         // Pausa o scanner
         if (quaggaInitialized && typeof Quagga !== 'undefined') {
@@ -1073,15 +1073,15 @@ function pausarCamera() {
                 // Pausa o Quagga
                 Quagga.pause();
                 window.quaggaPaused = true;
-                
+
                 // Para a visualização da câmera, mas mantém o estado
                 const videoElement = document.querySelector('video');
                 if (videoElement) {
                     videoElement.pause();
                 }
-                
+
                 isCameraPaused = true;
-                
+
                 // Atualiza a interface
                 const scannerContainer = document.getElementById('scannerContainer');
                 if (scannerContainer) {
@@ -1094,27 +1094,27 @@ function pausarCamera() {
                         </div>
                     `;
                 }
-                
+
                 // Atualiza a UI
                 document.getElementById('pauseScannerBtn').style.display = 'none';
                 document.getElementById('resumeScannerBtn').style.display = 'inline-flex';
-                
+
                 console.log('Câmera pausada');
-                
+
                 // Esconde o indicador de carregamento
                 const loadingIndicator = document.getElementById('loadingIndicator');
                 if (loadingIndicator) loadingIndicator.style.display = 'none';
-                
+
             } catch (e) {
                 console.error('Erro ao pausar o scanner:', e);
                 throw new Error('Não foi possível pausar o scanner: ' + (e.message || 'Erro desconhecido'));
             }
         }
-        
+
     } catch (error) {
         console.error('Erro ao pausar a câmera:', error);
         showError('Não foi possível pausar a câmera: ' + (error.message || 'Erro desconhecido'));
-        
+
         // Tenta parar o scanner em caso de erro
         try {
             if (typeof Quagga !== 'undefined') {
@@ -1124,7 +1124,7 @@ function pausarCamera() {
         } catch (e) {
             console.error('Erro ao parar o scanner após erro:', e);
         }
-        
+
         // Esconde o indicador de carregamento em caso de erro
         const loadingIndicator = document.getElementById('loadingIndicator');
         if (loadingIndicator) loadingIndicator.style.display = 'none';
@@ -1133,29 +1133,29 @@ function pausarCamera() {
 
 function retomarCamera() {
     console.log('Retomando câmera...');
-    
+
     try {
         if (typeof Quagga === 'undefined') {
             throw new Error('Biblioteca do scanner não carregada');
         }
-        
+
         Quagga.start();
         window.quaggaPaused = false;
-        
+
         // Atualiza a UI
         document.getElementById('resumeScannerBtn').style.display = 'none';
         document.getElementById('pauseScannerBtn').style.display = 'inline-flex';
-        
+
         console.log('Câmera retomada');
-        
+
         // Esconde o indicador de carregamento
         const loadingIndicator = document.getElementById('loadingIndicator');
         if (loadingIndicator) loadingIndicator.style.display = 'none';
-        
+
     } catch (error) {
         console.error('Erro ao retomar a câmera:', error);
         showError('Erro ao retomar a câmera: ' + (error.message || 'Erro desconhecido'));
-        
+
         // Tenta parar o scanner em caso de erro
         try {
             if (typeof Quagga !== 'undefined') {
@@ -1165,7 +1165,7 @@ function retomarCamera() {
         } catch (e) {
             console.error('Erro ao parar o scanner após erro:', e);
         }
-        
+
         // Esconde o indicador de carregamento em caso de erro
         const loadingIndicator = document.getElementById('loadingIndicator');
         if (loadingIndicator) loadingIndicator.style.display = 'none';
@@ -1184,7 +1184,7 @@ function resetScannerState() {
         }
         stream = null;
     }
-    
+
     // Para o Quagga se estiver inicializado
     if (quaggaInitialized && Quagga) {
         try {
@@ -1195,27 +1195,27 @@ function resetScannerState() {
             console.error('Erro ao parar o Quagga:', e);
         }
     }
-    
+
     // Reseta os estados
     scannerRunning = false;
     isCameraPaused = false;
     quaggaInitialized = false;
-    
+
     // Atualiza a interface
     updateCameraStatus(false);
-    
+
     // Atualiza a visibilidade dos botões
     document.getElementById('startScannerBtn').style.display = 'inline-flex';
     document.getElementById('pauseScannerBtn').style.display = 'none';
     document.getElementById('resumeScannerBtn').style.display = 'none';
     document.getElementById('stopScannerBtn').style.display = 'none';
-    
+
     return true;
 }
 
 function pararScanner() {
     console.log('Parando scanner...');
-    
+
     try {
         // Mostra o indicador de carregamento
         const loadingText = document.getElementById('loadingText');
@@ -1224,65 +1224,65 @@ function pararScanner() {
             loadingText.textContent = 'Parando scanner...';
             loadingIndicator.style.display = 'flex';
         }
-        
+
         // Para o scanner se estiver em execução
         if (window.quaggaInitialized && typeof Quagga !== 'undefined') {
             Quagga.stop().then(function() {
                 console.log('Scanner parado com sucesso');
-                
+
                 // Limpa o estado
                 window.quaggaInitialized = false;
                 window.quaggaPaused = false;
-                
+
                 // Limpa os listeners
                 Quagga.offDetected();
                 Quagga.offProcessed();
-                
+
                 // Atualiza a UI
                 document.getElementById('startScannerBtn').style.display = 'inline-flex';
                 document.getElementById('pauseScannerBtn').style.display = 'none';
                 document.getElementById('resumeScannerBtn').style.display = 'none';
                 document.getElementById('stopScannerBtn').style.display = 'none';
-                
+
                 // Limpa o container do scanner
                 const scannerContainer = document.getElementById('scannerContainer');
                 if (scannerContainer) {
                     scannerContainer.innerHTML = '<p style="color: white;">O scanner será exibido aqui</p>';
                 }
-                
+
                 // Limpa o resultado
                 const scannerResult = document.getElementById('scannerResult');
                 if (scannerResult) {
                     scannerResult.innerHTML = '';
                 }
-                
+
                 // Esconde o indicador de carregamento
                 if (loadingIndicator) loadingIndicator.style.display = 'none';
-                
+
             }).catch(function(error) {
                 console.error('Erro ao parar o scanner:', error);
                 showError('Erro ao parar o scanner: ' + (error.message || 'Erro desconhecido'));
-                
+
                 // Força a limpeza em caso de erro
                 window.quaggaInitialized = false;
                 window.quaggaPaused = false;
-                
+
                 // Esconde o indicador de carregamento em caso de erro
                 if (loadingIndicator) loadingIndicator.style.display = 'none';
             });
         } else {
             console.log('Scanner já estava parado');
-            
+
             // Atualiza a UI mesmo se o scanner não estiver inicializado
             document.getElementById('startScannerBtn').style.display = 'inline-flex';
             document.getElementById('pauseScannerBtn').style.display = 'none';
             document.getElementById('resumeScannerBtn').style.display = 'none';
             document.getElementById('stopScannerBtn').style.display = 'none';
-            
+
             // Esconde o indicador de carregamento
             if (loadingIndicator) loadingIndicator.style.display = 'none';
         }
-        
+
         if (scannerContainer) {
             scannerContainer.innerHTML = `
                 <div style="color: white; text-align: center; padding: 20px;">
@@ -1292,7 +1292,7 @@ function pararScanner() {
                     <p>Clique em "Iniciar Scanner" para ativar novamente.</p>
                 </div>`;
         }
-        
+
         document.getElementById("scannerResult").innerHTML = "<p>Scanner desativado.</p>";
         console.log('Scanner parado');
     } catch (error) {
@@ -1306,7 +1306,7 @@ function pararScanner() {
 function updateCameraStatus(active) {
     const statusElement = document.getElementById('cameraStatus');
     if (!statusElement) return;
-    
+
     // Atualiza o indicador de status
     const indicator = document.getElementById('cameraStatusIndicator');
     if (indicator) {
@@ -1338,7 +1338,7 @@ function showError(message) {
     errorDiv.style.marginLeft = 'auto';
     errorDiv.style.marginRight = 'auto';
     errorDiv.textContent = message;
-    
+
     // Adiciona o erro ao scannerResult ou ao container apropriado
     const resultDiv = document.getElementById('scannerResult');
     if (resultDiv) {
