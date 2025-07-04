@@ -20,7 +20,7 @@
         // Tema escuro detectado
         document.querySelector('link[rel="shortcut icon"]').href = 'images/barcode_white.png';
       }
-      
+
       // Ouvir mudanças no tema
       window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
         document.querySelector('link[rel="icon"]').href = e.matches ? 'images/barcode_white.png' : 'images/barcode_black.png';
@@ -41,7 +41,7 @@
         #cameraStatusIndicator {
             animation: pulse 2s infinite;
         }
-        
+
         /* Estilo para o selo BETA */
         .beta-badge {
             display: inline-block;
@@ -59,12 +59,12 @@
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
             text-shadow: 0 1px 1px rgba(0,0,0,0.2);
         }
-        
+
         /* Estilo para o ícone de frasco de laboratório */
         .fa-flask {
             animation: float 3s ease-in-out infinite;
         }
-        
+
         @keyframes float {
             0% { transform: translateY(0px); }
             50% { transform: translateY(-10px); }
@@ -767,50 +767,50 @@
     <div style="margin: 20px 0; padding: 15px; background: #f9f9f9; border-radius: 8px; box-sizing: border-box; width: 100%;">
         <h2 style="text-align: center; margin-bottom: 20px;"><i class="fas fa-barcode"></i> Pesquisar Produto</h2>
         <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 15px;">
-            <input type="text" 
-                   id="searchBarcode" 
-                   placeholder="Digite o código de barras (UPC, EAN, ISBN)" 
+            <input type="text"
+                   id="searchBarcode"
+                   placeholder="Digite o código de barras (UPC, EAN, ISBN)"
                    style="flex: 1; min-width: 0; padding: 12px; font-size: 16px; border: 2px solid #4CAF50; border-radius: 8px; box-sizing: border-box;"
                    autocomplete="off" />
-            <button onclick="buscarProduto()" 
+            <button onclick="buscarProduto()"
                     style="padding: 12px 16px; background: #4CAF50; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: 400; white-space: nowrap; flex-shrink: 0;">
                 <i class="fas fa-search"></i> Buscar
             </button>
         </div>
         <div id="barcode-type" style="color: #666; font-size: 14px; margin-bottom: 10px;"></div>
     </div>
-    
+
     <div id="searchResult" style="margin-top: 20px;"></div>
-    
+
     <br>
     <hr />
-    
+
     <script>
         // Configuração inicial do campo de busca
         document.addEventListener('DOMContentLoaded', function() {
             const searchInput = document.getElementById('searchBarcode');
-            
+
             if (searchInput) {
                 // Habilitar o campo
                 searchInput.disabled = false;
                 searchInput.readOnly = false;
-                
+
                 // Remover qualquer estilo que possa estar bloqueando
                 searchInput.style.pointerEvents = 'auto';
                 searchInput.style.opacity = '1';
-                
+
                 // Adicionar evento de tecla Enter
                 searchInput.addEventListener('keypress', function(e) {
                     if (e.key === 'Enter') {
                         buscarProduto();
                     }
                 });
-                
+
                 // Focar no campo
                 setTimeout(() => {
                     searchInput.focus();
                 }, 100);
-                
+
                 console.log('Campo de busca inicializado com sucesso');
             } else {
                 console.error('Erro: Campo de busca não encontrado');
@@ -829,7 +829,7 @@
                 justify-content: center;
             }
         }
-        
+
         /* Estilo para o modo de tela cheia */
         .fullscreen-scanner {
             position: fixed;
@@ -846,7 +846,7 @@
             padding: 20px;
             box-sizing: border-box;
         }
-        
+
         .fullscreen-scanner #interactive {
             width: 100% !important;
             max-width: 100% !important;
@@ -855,12 +855,12 @@
             margin: 0 !important;
             border-radius: 0 !important;
         }
-        
+
         .fullscreen-scanner .scanner-buttons {
             margin-top: 20px;
             z-index: 1001;
         }
-        
+
         .fullscreen-scanner .scanner-section {
             margin: 0 !important;
             padding: 0 !important;
@@ -871,7 +871,7 @@
             justify-content: center;
             align-items: center;
         }
-        
+
         .fullscreen-toggle {
             position: absolute;
             top: 15px;
@@ -888,39 +888,39 @@
             cursor: pointer;
             z-index: 1002;
         }
-        
+
         .fullscreen-toggle:hover {
             background: rgba(0,0,0,0.8);
         }
     </style>
-    
+
     <br>
-    
+
     <!-- Aviso sobre o recurso beta do scanner -->
     <div id="betaWarning" style="max-width: 800px; margin: 20px auto; padding: 30px 25px; background: linear-gradient(135deg, #fff9e6 0%, #fff3cd 100%); border: 1px solid #ffeeba; border-radius: 12px; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.1); position: relative; overflow: hidden;">
         <!-- Ícone grande -->
         <div style="font-size: 48px; color: #ffc107; margin-bottom: 20px;">
             <i class="fa-solid fa-flask"></i>
         </div>
-        
+
         <!-- Título com selo BETA -->
         <h3 style="margin: 0 0 15px 0; color: #856404; font-size: 1.8em; font-weight: 600; position: relative; display: inline-block; padding: 0 15px;">
-            Scanner de Código de Barras 
+            Scanner de Código de Barras
             <span class="beta-badge">BETA</span>
         </h3>
-        
+
         <!-- Mensagem principal -->
         <p style="margin: 15px 0 25px 0; color: #856404; font-size: 1.1em; line-height: 1.5;">
             O scanner está em testes e está funcionalidade é Experimental.
             <br>
             <strong>Erros inesperados podem ocorrer durante o uso.</strong>
         </p>
-        
+
         <!-- Botão de ação -->
         <button id="acceptBeta" style="background: linear-gradient(135deg, #4a6bdf 0%, #3a56c4 100%); color: white; border: none; border-radius: 50px; padding: 12px 30px; font-size: 1.1em; cursor: pointer; display: inline-flex; align-items: center; gap: 10px; margin: 0 auto; box-shadow: 0 4px 15px rgba(74, 107, 223, 0.3); transition: all 0.3s ease;">
             <i class="fas fa-check-circle"></i> Quero Testar
         </button>
-        
+
         <!-- Conteúdo adicional (inicialmente oculto) -->
         <div id="scannerBetaContent" style="display: none; margin-top: 25px; padding: 15px; background: rgba(255,255,255,0.7); border-radius: 8px; text-align: left;">
             <p style="font-size: 0.95em; color: #856404; margin: 0 0 10px 0;">
@@ -933,17 +933,17 @@
                 <li>Será necessário conceder permissão de acesso à câmera</li>
             </ul>
         </div>
-        
+
         <!-- Decoração de canto -->
         <div style="position: absolute; top: 0; right: 0; width: 0; height: 0; border-style: solid; border-width: 0 60px 60px 0; border-color: transparent #ffc107 transparent transparent; z-index: 1;"></div>
     </div>
-    
+
     <section id="scannerSection" class="scanner-section" style="margin: 20px 0 60px; padding: 0 15px; display: none;">
         <h2 style="text-align: center; margin-bottom: 20px;"><i class="fas fa-barcode"></i> Scanner de Código de Barras</h2>
-        
-        
+
+
         <div class="scanner-buttons" style="display: flex; gap: 10px; justify-content: center; margin-bottom: 20px; flex-wrap: wrap;">
-            <button id="startScannerBtn" data-action="start" 
+            <button id="startScannerBtn" data-action="start"
                     style="padding: 10px 20px; background: #4CAF50; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 15px; white-space: nowrap; display: inline-flex; align-items: center; gap: 8px; transition: all 0.3s ease;">
                 <i class="fas fa-camera"></i> Iniciar Scanner
             </button>
@@ -960,15 +960,15 @@
                 <i class="fas fa-stop"></i> Parar Scanner
             </button>
         </div>
-        
+
         <div id="scannerContainer" style="position: relative; z-index: 1;">
             <p style="color: white;">O scanner será exibido aqui</p>
         </div>
-        
+
 
         <div id="scannerResult" style="text-align: center; margin: 15px 0 0; color: #555; font-size: 0.95em;"></div>
     </section>
-    
+
     <div style="height: 40px;"></div> <!-- Espaço extra no final da página -->
 
     <!-- Add a loading state indicator -->
@@ -976,13 +976,13 @@
         <div class="spinner" style="width: 50px; height: 50px; border: 5px solid #f3f3f3; border-top: 5px solid #3498db; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px;"></div>
         <p id="loadingText">Inicializando o scanner...</p>
     </div>
-    
+
     <style>
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
-        
+
         .error-message {
             background-color: #f8d7da;
             color: #721c24;
@@ -991,7 +991,7 @@
             margin: 10px 0;
             border: 1px solid #f5c6cb;
         }
-        
+
         .success-message {
             background-color: #d4edda;
             color: #155724;
@@ -1001,7 +1001,7 @@
             border: 1px solid #c3e6cb;
         }
     </style>
-    
+
     <script>
         // Global error handler
         window.showError = function(message) {
@@ -1010,7 +1010,7 @@
             errorDiv.className = 'error-message';
             errorDiv.innerHTML = `<i class="fas fa-exclamation-triangle"></i> ${message}`;
             document.body.prepend(errorDiv);
-            
+
             // Remove error after 10 seconds
             setTimeout(() => {
                 errorDiv.remove();
@@ -1022,10 +1022,10 @@
         document.addEventListener('DOMContentLoaded', function() {
             const loadingIndicator = document.getElementById('loadingIndicator');
             const loadingText = document.getElementById('loadingText');
-            
+
             // Show loading indicator immediately
             loadingIndicator.style.display = 'flex';
-            
+
             // Function to check if Quagga is loaded
             function checkQuaggaLoaded() {
                 if (typeof Quagga === 'undefined' || window.quaggaLoadError) {
@@ -1035,7 +1035,7 @@
                 }
                 return true;
             }
-            
+
             // Initial check
             if (!checkQuaggaLoaded()) {
                 // Try checking again after a delay in case of slow loading
@@ -1045,7 +1045,7 @@
                         loadingIndicator.style.display = 'none';
                     }
                 }, 500);
-                
+
                 // Give up after 10 seconds
                 setTimeout(() => {
                     clearInterval(checkInterval);
@@ -1061,7 +1061,7 @@
             }
         });
     </script>
-    
+
     <!-- Load your script with defer to ensure DOM is ready -->
     <script src="script.js" defer></script>
     <script src="scanner-beta.js" defer></script>

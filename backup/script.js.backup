@@ -11,19 +11,19 @@ function calcularDigitoVerificador(codigo) {
 function validarCodigoBarras(codigo) {
     // Remove todos os caracteres não numéricos
     const codigoLimpo = codigo.replace(/\D/g, '');
-    
+
     // Verifica o comprimento
     if (codigoLimpo.length < 8 || codigoLimpo.length > 13) {
         return { valido: false, mensagem: 'O código deve ter entre 8 e 13 dígitos' };
     }
-    
+
     // Verifica se são apenas números
     if (!/^\d+$/.test(codigoLimpo)) {
         return { valido: false, mensagem: 'O código deve conter apenas números' };
     }
-    
-    return { 
-        valido: true, 
+
+    return {
+        valido: true,
         codigo: codigoLimpo,
         tipo: identificarTipoCodigo(codigoLimpo)
     };
@@ -32,13 +32,13 @@ function validarCodigoBarras(codigo) {
 // Identifica o tipo de código de barras
 function identificarTipoCodigo(codigo) {
     const len = codigo.length;
-    
+
     // ISBN-10 (10 dígitos)
     if (len === 10) return 'ISBN-10';
-    
+
     // UPC-A (12 dígitos)
     if (len === 12) return 'UPC-A';
-    
+
     // EAN-13 (13 dígitos)
     if (len === 13) {
         // Verifica se é um ISBN-13 (começa com 978 ou 979)
@@ -47,10 +47,10 @@ function identificarTipoCodigo(codigo) {
         }
         return 'EAN-13';
     }
-    
+
     // EAN-8 (8 dígitos)
     if (len === 8) return 'EAN-8';
-    
+
     // Outros formatos
     return `Código de ${len} dígitos`;
 }
@@ -58,10 +58,10 @@ function identificarTipoCodigo(codigo) {
 // Converte entre formatos de código de barras
 function converterCodigo(codigo, formatoAlvo) {
     const { tipo } = validarCodigoBarras(codigo);
-    
+
     // Se já está no formato desejado, retorna o código original
     if (tipo === formatoAlvo) return codigo;
-    
+
     // Conversões suportadas
     if (formatoAlvo === 'EAN-13') {
         if (tipo === 'UPC-A') {
@@ -76,7 +76,7 @@ function converterCodigo(codigo, formatoAlvo) {
         const isbnBase = '978' + codigo.substring(0, 9);
         const digitoVerificador = calcularDigitoVerificador(isbnBase);
         return isbnBase + digitoVerificador;
-    } else if (formatoAlvo === 'ISBN-10' && tipo === 'ISBN-13' && 
+    } else if (formatoAlvo === 'ISBN-10' && tipo === 'ISBN-13' &&
               (codigo.startsWith('978') || codigo.startsWith('979'))) {
         // Converte ISBN-13 para ISBN-10 (apenas para códigos que começam com 978/979)
         const isbnBase = codigo.substring(3, 12);
@@ -87,7 +87,7 @@ function converterCodigo(codigo, formatoAlvo) {
         const digito = (11 - (soma % 11)) % 11;
         return isbnBase + (digito === 10 ? 'X' : digito);
     }
-    
+
     // Se não houver conversão suportada, retorna o código original
     return codigo;
 }
@@ -95,7 +95,7 @@ function converterCodigo(codigo, formatoAlvo) {
 // Normaliza um código de barras para o formato mais comum (EAN-13 quando possível)
 function normalizarCodigo(codigo) {
     const { tipo } = validarCodigoBarras(codigo);
-    
+
     switch (tipo) {
         case 'UPC-A':
             return '0' + codigo; // Converte para EAN-13
@@ -140,18 +140,18 @@ function gerarCodigos() {
 async function buscarProduto() {
     let codigoInput = document.getElementById("searchBarcode").value.trim();
     let resultado = document.getElementById("searchResult");
-    
+
     // Valida o código de barras
     const validacao = validarCodigoBarras(codigoInput);
     if (!validacao.valido) {
         resultado.innerHTML = `<p class='error'>✏️ ${validacao.mensagem || 'Código de barras inválido'}</p>`;
         return;
     }
-    
+
     // Normaliza o código para o formato mais comum
     const codigo = normalizarCodigo(validacao.codigo);
     const tipoCodigo = identificarTipoCodigo(codigo);
-    
+
     // Atualiza a interface para mostrar o tipo de código detectado
     document.getElementById('barcode-type').textContent = `Tipo: ${tipoCodigo}`;
 
@@ -165,8 +165,8 @@ async function buscarProduto() {
                 <p class="searching-sources">Consultando fontes disponíveis...</p>
             </div>
             <div class="barcode-formats">
-                <small>Formatos alternativos: 
-                    ${['EAN-13', 'UPC-A', 'ISBN-13', 'ISBN-10'].map(fmt => 
+                <small>Formatos alternativos:
+                    ${['EAN-13', 'UPC-A', 'ISBN-13', 'ISBN-10'].map(fmt =>
                         `<a href="#" onclick="event.preventDefault(); converterEAtualizar('${codigo}', '${fmt}');">${fmt}</a>`
                     ).join(' | ')}
                 </small>
@@ -184,7 +184,7 @@ async function buscarProduto() {
             searchUpcDatabase,
             searchGoogleShoppingScraper
         ];
-        
+
         // Se for um ISBN, prioriza as APIs de livros
         if (tipoCodigo.includes('ISBN')) {
             searchFunctions.unshift(searchGoogleBooks);
@@ -197,16 +197,16 @@ async function buscarProduto() {
         // Função para tentar a próxima busca
         const tryNextSearch = async () => {
             if (currentSearchIndex >= searchFunctions.length) return false;
-            
+
             const searchFunc = searchFunctions[currentSearchIndex];
             const sourceName = searchFunc.name.replace('search', '').replace(/([A-Z])/g, ' $1').trim();
-            
+
             // Atualiza a mensagem mostrando qual fonte está sendo consultada
             const searchingElement = document.querySelector('.searching-sources');
             if (searchingElement) {
                 searchingElement.textContent = `Consultando: ${sourceName}...`;
             }
-            
+
             try {
                 const result = await searchFunc(codigo);
                 if (result.found) {
@@ -215,14 +215,14 @@ async function buscarProduto() {
             } catch (error) {
                 console.error(`Erro na busca ${sourceName}:`, error);
             }
-            
+
             currentSearchIndex++;
             return tryNextSearch();
         };
 
         // Inicia a cadeia de buscas
         productInfo = await tryNextSearch();
-        
+
         if (productInfo.found) {
             resultado.innerHTML = formatProductInfo(productInfo);
         } else {
@@ -256,7 +256,7 @@ async function searchOpenFoodFacts(barcode) {
     try {
         const response = await fetch(`https://world.openfoodfacts.org/api/v0/product/${barcode}.json`);
         const data = await response.json();
-        
+
         if (data.status === 1) {
             const product = data.product;
             return {
@@ -288,7 +288,7 @@ async function searchUpcItemDb(barcode) {
     try {
         const response = await fetch(`/api/upc-itemdb/${barcode}`);
         const data = await response.json();
-        
+
         if (data.code === 'OK' && data.items && data.items.length > 0) {
             const item = data.items[0];
             return {
@@ -326,12 +326,12 @@ async function searchGoogleShopping(barcode) {
             },
             credentials: 'include'
         };
-        
+
         const response = await fetch(`https://google-data-scraper.p.rapidapi.com/search/shop/${encodeURIComponent(barcode)}`, options);
         const data = await response.json();
-        
+
         console.log('Resposta da API Google Shopping:', data); // Para depuração
-        
+
         // Verifica se a resposta tem a estrutura esperada
         if (data && data.shopping_results && data.shopping_results.length > 0) {
             const product = data.shopping_results[0];
@@ -363,7 +363,7 @@ async function searchWwWOpenProductData(barcode) {
     try {
         const response = await fetch(`https://world.openproductdata.com/api/v0/product/${barcode}.json`);
         const data = await response.json();
-        
+
         if (data.status === 'success' && data.product) {
             const product = data.product;
             return {
@@ -398,12 +398,12 @@ async function searchGoogleShoppingScraper(barcode) {
             },
             credentials: 'include'
         };
-        
+
         const response = await fetch(`https://google-shopping-scraper2.p.rapidapi.com/products?q=${encodeURIComponent(barcode)}&country=br&language=pt-br`, options);
         const data = await response.json();
-        
+
         console.log('Resposta da API Google Shopping Scraper:', data); // Para depuração
-        
+
         if (data.data && data.data.length > 0) {
             const product = data.data[0];
             return {
@@ -436,7 +436,7 @@ async function searchGoogleBooks(isbn) {
     try {
         const response = await fetch(`https://www.googleapis.com/books/v1/volumes?q=isbn:${isbn}`);
         const data = await response.json();
-        
+
         if (data.totalItems > 0 && data.items && data.items.length > 0) {
             const book = data.items[0].volumeInfo;
             return {
@@ -451,10 +451,10 @@ async function searchGoogleBooks(isbn) {
                     'número de páginas': book.pageCount ? `${book.pageCount} páginas` : 'Não informado',
                     idioma: book.language ? book.language.toUpperCase() : 'Não informado',
                     'código ISBN': isbn,
-                    'descrição': book.description ? 
-                        (book.description.length > 200 ? 
-                         book.description.substring(0, 200) + '...' : 
-                         book.description) : 
+                    'descrição': book.description ?
+                        (book.description.length > 200 ?
+                         book.description.substring(0, 200) + '...' :
+                         book.description) :
                         'Descrição não disponível'
                 },
                 source: 'Google Books',
@@ -473,7 +473,7 @@ async function searchOpenLibrary(isbn) {
         const response = await fetch(`https://openlibrary.org/api/books?bibkeys=ISBN:${isbn}&format=json&jscmd=data`);
         const data = await response.json();
         const bookKey = `ISBN:${isbn}`;
-        
+
         if (data[bookKey]) {
             const book = data[bookKey];
             return {
@@ -487,9 +487,9 @@ async function searchOpenLibrary(isbn) {
                     'ano de publicação': book.publish_date || 'Não informado',
                     'número de páginas': book.number_of_pages ? `${book.number_of_pages} páginas` : 'Não informado',
                     'código ISBN': isbn,
-                    'identificadores': book.identifiers ? 
-                        Object.entries(book.identifiers).map(([key, value]) => 
-                            `${key}: ${value.join(', ')}`).join(' | ') : 
+                    'identificadores': book.identifiers ?
+                        Object.entries(book.identifiers).map(([key, value]) =>
+                            `${key}: ${value.join(', ')}`).join(' | ') :
                         'Não disponível'
                 },
                 source: 'Open Library',
@@ -507,7 +507,7 @@ async function searchUpcDatabase(barcode) {
     try {
         const response = await fetch(`https://api.upcdatabase.org/product/${barcode}?apikey=${process.env.UPC_DATABASE_KEY}`);
         const data = await response.json();
-        
+
         if (data.valid === true) {
             return {
                 found: true,
@@ -537,11 +537,11 @@ function formatProductInfo(productInfo) {
     for (const [key, value] of Object.entries(productInfo.details)) {
         detailsHtml += `<p><strong>${key}:</strong> ${value}</p>`;
     }
-    
+
     // Adiciona link para o produto se disponível
-    const productLink = productInfo.productUrl ? 
+    const productLink = productInfo.productUrl ?
         `<p class='product-link'><a href='${productInfo.productUrl}' target='_blank' class='btn'>Ver no Google Shopping →</a></p>` : '';
-    
+
     return `
         <div class='product-info'>
             <div class='product-header'>
@@ -581,34 +581,34 @@ function setupCountrySearch() {
     const searchInput = document.getElementById('countrySearch');
     const countrySelect = document.getElementById('countrySelect');
     const options = Array.from(countrySelect.options);
-    
+
     // Armazena todas as opções originais
     const originalOptions = options.map(option => ({
         value: option.value,
         text: option.text,
         element: option
     }));
-    
+
     // Função para filtrar as opções
     function filterOptions(searchTerm) {
         const term = searchTerm.toLowerCase().trim();
-        
+
         // Remove todas as opções atuais
         while (countrySelect.options.length > 0) {
             countrySelect.remove(0);
         }
-        
+
         // Filtra as opções originais
-        const filteredOptions = originalOptions.filter(option => 
-            option.text.toLowerCase().includes(term) || 
+        const filteredOptions = originalOptions.filter(option =>
+            option.text.toLowerCase().includes(term) ||
             option.value.includes(term)
         );
-        
+
         // Adiciona as opções filtradas de volta ao select
         filteredOptions.forEach(option => {
             countrySelect.add(option.element);
         });
-        
+
         // Se não houver resultados, mostra uma mensagem
         if (filteredOptions.length === 0) {
             const noResults = document.createElement('option');
@@ -618,12 +618,12 @@ function setupCountrySearch() {
             countrySelect.add(noResults);
         }
     }
-    
+
     // Adiciona o evento de input para a busca
     searchInput.addEventListener('input', (e) => {
         filterOptions(e.target.value);
     });
-    
+
     // Adiciona foco ao campo de busca quando a página carrega
     searchInput.focus();
 }
@@ -640,7 +640,7 @@ function iniciarScanner() {
     if (scannerRunning) {
         return;
     }
-    
+
     // Limpar resultados anteriores e adicionar container para o scanner
     const scannerContainer = document.getElementById('scannerContainer');
     scannerContainer.innerHTML = `
@@ -651,10 +651,10 @@ function iniciarScanner() {
             <div class="detection-info">Aponte para um código de barras</div>
         </div>
     `;
-    
+
     document.getElementById("scannerResult").innerHTML = "<p>Iniciando câmera... Por favor, permita o acesso à câmera quando solicitado.</p>";
     scannerRunning = true;
-    
+
     // Configuração do QuaggaJS
     Quagga.init({
         inputStream: {
@@ -710,10 +710,10 @@ function iniciarScanner() {
             try {
                 const drawingCtx = Quagga.canvas.ctx.overlay;
                 const drawingCanvas = Quagga.canvas.dom.overlay;
-                
+
                 if (drawingCtx && drawingCanvas) {
                     drawingCtx.clearRect(0, 0, parseInt(drawingCanvas.width), parseInt(drawingCanvas.height));
-                    
+
                     if (result) {
                         if (result.boxes) {
                             result.boxes.filter(function(box) {
@@ -722,11 +722,11 @@ function iniciarScanner() {
                                 Quagga.ImageDebug.drawPath(box, {x: 0, y: 1}, drawingCtx, {color: "green", lineWidth: 2});
                             });
                         }
-                        
+
                         if (result.box) {
                             Quagga.ImageDebug.drawPath(result.box, {x: 0, y: 1}, drawingCtx, {color: "#00F", lineWidth: 2});
                         }
-                        
+
                         if (result.codeResult && result.codeResult.code) {
                             Quagga.ImageDebug.drawPath(result.line, {x: 'x', y: 'y'}, drawingCtx, {color: 'red', lineWidth: 3});
                         }
@@ -736,7 +736,7 @@ function iniciarScanner() {
                 console.error("Erro ao processar frame:", e);
             }
         });
-        
+
         Quagga.start().then(() => {
             // Atualizar a interface quando a câmera estiver pronta
             const scannerContainer = document.getElementById('scannerContainer');
@@ -761,22 +761,22 @@ function iniciarScanner() {
     Quagga.onDetected(function(result) {
         const code = result.codeResult.code;
         const now = new Date().getTime();
-        
+
         // Evitar leituras duplicadas muito próximas no tempo (500ms)
         if (code === lastScannedCode && (now - lastScanTime < 500)) {
             return;
         }
-        
+
         lastScannedCode = code;
         lastScanTime = now;
-        
+
         // Atualizar o campo de busca e pesquisar
         const searchInput = document.getElementById("searchBarcode");
         if (searchInput) {
             searchInput.value = code;
             // Disparar o evento de input para atualizar a interface
             searchInput.dispatchEvent(new Event('input'));
-            
+
             // Atualizar feedback visual
             const scannerContainer = document.getElementById('scannerContainer');
             if (scannerContainer) {
@@ -788,7 +788,7 @@ function iniciarScanner() {
                     </div>
                 `;
             }
-            
+
             // Pesquisar automaticamente após um pequeno atraso
             setTimeout(() => {
                 buscarProduto();

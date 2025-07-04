@@ -15,7 +15,7 @@
         #cameraStatusIndicator {
             animation: pulse 2s infinite;
         }
-        
+
         /* Estilo para o selo BETA */
         .beta-badge {
             display: inline-block;
@@ -33,12 +33,12 @@
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
             text-shadow: 0 1px 1px rgba(0,0,0,0.2);
         }
-        
+
         /* Estilo para o ícone de frasco de laboratório */
         .fa-flask {
             animation: float 3s ease-in-out infinite;
         }
-        
+
         @keyframes float {
             0% { transform: translateY(0px); }
             50% { transform: translateY(-10px); }
@@ -69,25 +69,25 @@
             <div style="font-size: 48px; color: #ffc107; margin-bottom: 20px;">
                 <i class="fa-solid fa-flask"></i>
             </div>
-            
+
             <!-- Título com selo BETA -->
             <h3 style="margin: 0 0 15px 0; color: #856404; font-size: 1.8em; font-weight: 600; position: relative; display: inline-block; padding: 0 15px;">
-                Scanner de Código de Barras 
+                Scanner de Código de Barras
                 <span class="beta-badge">BETA</span>
             </h3>
-            
+
             <!-- Mensagem principal -->
             <p style="margin: 15px 0 25px 0; color: #856404; font-size: 1.1em; line-height: 1.5;">
                 O scanner está em testes e está funcionalidade é Experimental.
                 <br>
                 <strong>Erros inesperados podem ocorrer durante o uso.</strong>
             </p>
-            
+
             <!-- Botão de ação -->
             <button id="acceptBeta" style="background: linear-gradient(135deg, #4a6bdf 0%, #3a56c4 100%); color: white; border: none; border-radius: 50px; padding: 12px 30px; font-size: 1.1em; cursor: pointer; display: inline-flex; align-items: center; gap: 10px; margin: 0 auto; box-shadow: 0 4px 15px rgba(74, 107, 223, 0.3); transition: all 0.3s ease;">
                 <i class="fas fa-check-circle"></i> Quero Testar
             </button>
-            
+
             <!-- Conteúdo adicional (inicialmente oculto) -->
             <div id="scannerBetaContent" style="display: none; margin-top: 25px; padding: 15px; background: rgba(255,255,255,0.7); border-radius: 8px; text-align: left;">
                 <p style="font-size: 0.95em; color: #856404; margin: 0 0 10px 0;">
@@ -100,7 +100,7 @@
                     <li>Será necessário conceder permissão de acesso à câmera</li>
                 </ul>
             </div>
-            
+
             <!-- Decoração de canto -->
             <div style="position: absolute; top: 0; right: 0; width: 0; height: 0; border-style: solid; border-width: 0 60px 60px 0; border-color: transparent #ffc107 transparent transparent; z-index: 1;"></div>
         </div>
@@ -110,12 +110,12 @@
         // Adiciona funcionalidade ao botão "Quero Testar"
         document.getElementById('acceptBeta').addEventListener('click', function() {
             const betaContent = document.getElementById('scannerBetaContent');
-            
+
             // Alterna a visibilidade do conteúdo adicional
             if (betaContent.style.display === 'none' || !betaContent.style.display) {
                 betaContent.style.display = 'block';
                 this.innerHTML = '<i class="fas fa-check-circle"></i> Entendi os riscos';
-                
+
                 // Rola suavemente para o conteúdo
                 betaContent.scrollIntoView({ behavior: 'smooth' });
             } else {

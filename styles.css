@@ -29,9 +29,9 @@ html {
     -webkit-text-size-adjust: 100%;
 }
 
-body { 
-    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; 
-    line-height: 1.6; 
+body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    line-height: 1.6;
     color: var(--text-color);
     max-width: 1200px;
     margin: 0 auto;
@@ -177,7 +177,7 @@ label {
     font-size: 0.95rem;
 }
 
-select, 
+select,
 input {
     width: 100%;
     padding: 12px 15px;
@@ -200,7 +200,7 @@ select {
     padding-right: 40px;
 }
 
-select:focus, 
+select:focus,
 input:focus {
     border-color: var(--primary-color);
     box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
@@ -559,11 +559,11 @@ button.secondary:hover {
 }
 
 @keyframes spin {
-    0% { 
-        transform: rotate(0deg); 
+    0% {
+        transform: rotate(0deg);
     }
-    100% { 
-        transform: rotate(360deg); 
+    100% {
+        transform: rotate(360deg);
     }
 }
 
@@ -942,19 +942,19 @@ button.secondary:hover {
     body {
         padding: var(--spacing-md);
     }
-    
+
     .container {
         padding: var(--spacing-lg);
     }
-    
+
     .button-group {
         grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
     }
-    
+
     button {
         margin-bottom: 0;
     }
-    
+
     .barcode {
         font-size: 3rem;
     }
@@ -964,21 +964,21 @@ button.secondary:hover {
     html {
         font-size: 17px;
     }
-    
+
     body {
         padding: var(--spacing-lg);
     }
-    
+
     .container {
         padding: var(--spacing-xl);
     }
-    
+
     .form-row {
         display: grid;
         grid-template-columns: 1fr 1fr;
         gap: var(--spacing-md);
     }
-    
+
     .barcode {
         font-size: 4rem;
     }
@@ -989,12 +989,12 @@ button.secondary:hover {
     html {
         font-size: 18px;
     }
-    
+
     .container {
         max-width: 1000px;
         margin: 0 auto var(--spacing-xl);
     }
-    
+
     .barcode {
         font-size: 5rem;
     }
@@ -1008,19 +1008,19 @@ button.secondary:hover {
         --spacing-md: 16px;
         --spacing-lg: 24px;
     }
-    
+
     h1 {
         font-size: 1.5rem;
     }
-    
+
     h2 {
         font-size: 1.3rem;
     }
-    
+
     button, select, input {
         padding: 10px 12px;
     }
-    
+
     .barcode {
         font-size: 2rem;
     }
@@ -1033,17 +1033,17 @@ button.secondary:hover {
         padding: 0;
         font-size: 12pt;
     }
-    
+
     .container {
         box-shadow: none;
         padding: 0;
         margin: 0;
     }
-    
+
     button, .tabs, .tab {
         display: none !important;
     }
-    
+
     .barcode {
         font-size: 3rem;
     }
